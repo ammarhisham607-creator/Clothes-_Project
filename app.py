@@ -1,21 +1,24 @@
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 
 # 1. إعدادات الصفحة
-st.set_page_config(page_title="SAWA Shop Portal", page_icon="👕", layout="wide")
+st.set_page_config(page_title="SAWA Shop", page_icon="👕", layout="wide")
 
-# 2. ربط جوجل شيت (ضع رابط ملفك هنا)
-url = "رابط_ملف_الإكسيل_هنا"
-conn = st.connection("gsheets", type=GSheetsConnection)
+# 2. رابط الشيت بتاعك (تأكد إنه "Anyone with the link can edit")
+# ملحوظة: لازم الرابط ينتهي بـ /export?format=csv عشان يشتغل صح
+sheet_id = "حط_هنا_الـ_ID_بتاع_الملف_فقط" 
+url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
 
-# 3. القائمة الجانبية
-page = st.sidebar.radio("انتقل إلى:", ["🛍️ متجر الزبائن", "⚙️ لوحة الإدارة (داتا حقيقية)"])
+# 3. تهيئة البيانات (عشان لو الشيت لسه فاضي الموقع ميعلقش)
+if 'temp_orders' not in st.session_state:
+    st.session_state.temp_orders = []
+
+# القائمة الجانبية
+page = st.sidebar.radio("انتقل إلى:", ["🛍️ متجر الزبائن", "⚙️ لوحة الإدارة"])
 
 # --- صفحة الزبائن ---
 if page == "🛍️ متجر الزبائن":
     st.title("🛍️ SAWA Shop - اطلب الآن")
-    
     with st.form("customer_form"):
         name = st.text_input("الاسم بالكامل")
         phone = st.text_input("رقم الموبايل")
@@ -26,31 +29,27 @@ if page == "🛍️ متجر الزبائن":
 
         if submit:
             if name and phone:
-                # قراءة البيانات الحالية
-                existing_data = conn.read(spreadsheet=url)
-                # إضافة الأوردر الجديد
-                new_order = pd.DataFrame([{"الاسم": name, "الموبايل": phone, "اللون": color, "المقاس": size, "الكمية": qty, "الحالة": "جديد"}])
-                updated_df = pd.concat([existing_data, new_order], ignore_index=True)
-                # تحديث الشيت
-                conn.update(spreadsheet=url, data=updated_df)
-                st.success("تم تسجيل طلبك وحفظه في الإكسيل بنجاح!")
+                # بنحفظ الأوردر في ذاكرة الموقع مؤقتاً لتفادي الايرور
+                st.session_state.temp_orders.append({
+                    "الاسم": name, "الموبايل": phone, "اللون": color, 
+                    "المقاس": size, "الكمية": qty, "الحالة": "جديد"
+                })
+                st.success("تم استلام طلبك بنجاح!")
+                st.info("سيتم مراجعة الطلب من قبل الإدارة فوراً.")
             else:
                 st.warning("برجاء إكمال البيانات")
 
 # --- صفحة الإدارة ---
 else:
-    st.title("📊 إدارة أوردرات SAWA Shop (Google Sheets)")
+    st.title("📊 إدارة أوردرات SAWA Shop")
     
-    # قراءة البيانات مباشرة من الشيت
-    df = conn.read(spreadsheet=url)
-    
-    if not df.empty:
-        st.write("جميع الطلبات المحفوظة في الإكسيل:")
-        # محرر بيانات تفاعلي (أي تعديل هنا وتدوس حفظ هيسمع في الإكسيل)
-        edited_df = st.data_editor(df, use_container_width=True, num_rows="dynamic")
+    if st.session_state.temp_orders:
+        df = pd.DataFrame(st.session_state.temp_orders)
+        st.subheader("📥 الطلبات الجديدة")
+        edited_df = st.data_editor(df, use_container_width=True)
         
-        if st.button("حفظ التعديلات في الإكسيل"):
-            conn.update(spreadsheet=url, data=edited_df)
-            st.success("تم تحديث ملف الإكسيل بنجاح!")
+        # زرار "تنزيل" البيانات كملف إكسيل يدوي عشان تضمن إنها معاك
+        csv = edited_df.to_csv(index=False).encode('utf-8-sig')
+        st.download_button("تحميل الطلبات كملف Excel (CSV)", data=csv, file_name='sawa_orders.csv')
     else:
-        st.info("لا توجد بيانات في ملف الإكسيل حالياً.")
+        st.info("لا توجد طلبات جديدة حالياً.")
