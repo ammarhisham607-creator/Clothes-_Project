@@ -18,7 +18,7 @@ st.sidebar.header("اعدادات المخزن والتكاليف")
 cost_plain = st.sidebar.number_input("سعر التيشيرت سادة (من المصنع)", min_value=0.0, value=150.0, step=5.0)
 cost_printing = st.sidebar.number_input("تكلفة الطباعة والخامات ", min_value=0.0, value=50.0, step=5.0)
 initial_stock = st.sidebar.number_input("الكمية المتوفرة حاليا بالسوق", min_value=0, value=50)
-alert_limit = st.sidebar.slider("5 ,20 ,1 ,"حد تنبيه النواقص)
+alert_limit = st.sidebar.slider(5 ,20 ,1 ,"حد تنبيه النواقص")
 # --- الجزء الرئيسى: تسجيل الاوردر---
 st.header("تسجيل أوردر جديد")
 with st.container():
