@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 #اعدادات واجهة الموقع
-st.set_page_config(page _title="ادارة الملابس-SAWA Shop", layout="wide")
+st.set_page_config(page_title="ادارة الملابس-SAWA Shop", layout="wide")
 # لتحسين المظهر CSS تصميم بسيط ب ال
 st.markdown(f"""
 <style>
