@@ -6,112 +6,113 @@ import io
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="SAWA Shop", page_icon="👕", layout="wide")
 
-# كود CSS خفيف جداً عشان ميهنجش المتصفح
-st.markdown("""
-    <style>
-    .main { background-color: #fafafa; }
-    .stButton>button { width: 100%; border-radius: 8px; background-color: #000; color: white; }
-    h1, h2, h3 { text-align: right; font-family: 'Arial'; }
-    </style>
-    """, unsafe_allow_html=True)
+# 2. تهيئة البيانات بشكل سليم
+if 'orders' not in st.session_state:
+    st.session_state.orders = []
+if 'categories' not in st.session_state:
+    st.session_state.categories = ["جيم 💪", "حيوانات 🦁"]
+if 'catalog_images' not in st.session_state:
+    st.session_state.catalog_images = {cat: [] for cat in st.session_state.categories}
+if 'tshirt_colors' not in st.session_state:
+    st.session_state.tshirt_colors = ["أبيض", "أسود", "رمادي", "كحلي"]
 
-# 2. وظيفة لتصغير حجم الصور (عشان الموقع ميهنجش)
-def process_image(uploaded_file):
-    img = Image.open(uploaded_file)
-    # تحويل الصورة لـ RGB إذا كانت PNG بشفافية لتجنب المشاكل
-    if img.mode in ("RGBA", "P"):
-        img = img.convert("RGB")
-    # تصغير الحجم بحد أقصى 500 بكسل
-    img.thumbnail((500, 500))
-    return img
+# 3. وظيفة معالجة الصور (تصغير وتقليل جودة لسرعة الموقع)
+def process_and_save(uploaded_file):
+    try:
+        img = Image.open(uploaded_file)
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        # تصغير الصورة لحجم معقول جداً
+        img.thumbnail((400, 400))
+        return img
+    except Exception as e:
+        st.error(f"خطأ في معالجة الصورة: {e}")
+        return None
 
-# 3. تهيئة البيانات
-if 'orders' not in st.session_state: st.session_state.orders = []
-if 'categories' not in st.session_state: st.session_state.categories = ["جيم 💪", "حيوانات 🦁"]
-if 'catalog_images' not in st.session_state: st.session_state.catalog_images = {cat: [] for cat in st.session_state.categories}
-if 'tshirt_colors' not in st.session_state: st.session_state.tshirt_colors = ["أبيض", "أسود", "رمادي", "كحلي"]
-
-# 4. القائمة الجانبية
-page = st.sidebar.radio("القائمة:", ["🛍️ متجر الزبائن", "⚙️ لوحة الإدارة"])
+# القائمة الجانبية
+page = st.sidebar.radio("انتقل إلى:", ["🛍️ متجر الزبائن", "⚙️ لوحة الإدارة"])
 
 # --- صفحة الزبائن ---
 if page == "🛍️ متجر الزبائن":
-    st.markdown("<h1 style='text-align: center;'>SAWA Shop</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: right;'>SAWA Shop - متجر الزبائن</h1>", unsafe_allow_html=True)
     
-    col1, col2 = st.columns([1, 1], gap="medium")
-    
+    col1, col2 = st.columns(2)
     with col1:
-        st.subheader("📝 تفاصيل الطلب")
         name = st.text_input("الاسم")
         phone = st.text_input("الموبايل")
-        color = st.selectbox("اللون", st.session_state.tshirt_colors)
-        size = st.select_slider("المقاس", options=["S", "M", "L", "XL", "XXL"])
-        qty = st.number_input("الكمية", min_value=1, step=1)
+        color = st.selectbox("لون التيشيرت", st.session_state.tshirt_colors)
+        size = st.selectbox("المقاس", ["S", "M", "L", "XL", "XXL"])
+        qty = st.number_input("الكمية", min_value=1)
 
     with col2:
-        st.subheader("🖼️ التصميم")
-        source = st.radio("المصدر:", ["من الكتالوج", "رفع صورة خاصة"], horizontal=True)
+        source = st.radio("اختر التصميم من:", ["الكتالوج", "رفع خاص"])
+        final_design = None
         
-        design_data = None
-        if source == "من الكتالوج":
+        if source == "الكتالوج":
             cat = st.selectbox("القسم", st.session_state.categories)
             imgs = st.session_state.catalog_images.get(cat, [])
             if imgs:
-                idx = st.slider("اختر التصميم", 1, len(imgs)) - 1
-                st.image(imgs[idx], use_container_width=True)
-                design_data = f"Catalog: {cat} #{idx+1}"
+                idx = st.select_slider("اختر صورة التصميم", options=range(len(imgs)), format_func=lambda x: f"صورة {x+1}")
+                st.image(imgs[idx], width=200)
+                final_design = f"قسم {cat} - صورة {idx+1}"
             else:
-                st.info("القسم فارغ")
+                st.warning("هذا القسم لا يحتوي على صور.")
         else:
-            up_file = st.file_uploader("ارفع صورتك", type=['jpg', 'png'])
-            if up_file:
-                design_data = "Custom Design Uploaded"
+            up = st.file_uploader("ارفع صورتك", type=['jpg', 'jpeg', 'png'])
+            if up: final_design = "تصميم خاص مرفوع"
 
-    if st.button("إرسال الأوردر ✨"):
-        if name and phone and design_data:
+    if st.button("تأكيد الطلب ✨"):
+        if name and phone and final_design:
             st.session_state.orders.append({
                 "الاسم": name, "الموبايل": phone, "اللون": color, 
-                "المقاس": size, "الكمية": qty, "التصميم": design_data, "الحالة": "جديد"
+                "المقاس": size, "الكمية": qty, "التصميم": final_design, "الحالة": "جديد"
             })
-            st.success("تم الإرسال!")
+            st.success("تم إرسال الأوردر بنجاح!")
             st.balloons()
 
 # --- صفحة الإدارة ---
 else:
-    st.title("⚙️ الإدارة")
+    st.title("⚙️ لوحة الإدارة")
+    t1, t2 = st.tabs(["📥 الأوردرات", "🎨 إضافة محتوى"])
     
-    tab1, tab2 = st.tabs(["📥 الأوردرات", "🎨 التعديلات"])
-    
-    with tab1:
+    with t1:
         if st.session_state.orders:
-            df = pd.DataFrame(st.session_state.orders)
-            st.data_editor(df, use_container_width=True)
-            if st.button("مسح البيانات"):
+            st.table(pd.DataFrame(st.session_state.orders))
+            if st.button("مسح كل الأوردرات"):
                 st.session_state.orders = []
                 st.rerun()
         else:
-            st.info("لا توجد طلبات")
+            st.info("لا توجد أوردرات.")
 
-    with tab2:
+    with t2:
+        st.subheader("رفع صور للكتالوج")
+        target_cat = st.selectbox("اختار القسم", st.session_state.categories)
+        files = st.file_uploader("اختار الصور لرفعها", accept_multiple_files=True, type=['jpg', 'png', 'jpeg'])
+        
+        if st.button("تأكيد رفع الصور"):
+            if files:
+                # التأكد من وجود المفتاح في القاموس لتجنب الايرور
+                if target_cat not in st.session_state.catalog_images:
+                    st.session_state.catalog_images[target_cat] = []
+                
+                for f in files:
+                    processed_img = process_and_save(f)
+                    if processed_img:
+                        st.session_state.catalog_images[target_cat].append(processed_img)
+                st.success(f"تم إضافة {len(files)} صور لقسم {target_cat} بنجاح!")
+            else:
+                st.error("يرجى اختيار ملفات أولاً.")
+        
+        st.divider()
         c1, c2 = st.columns(2)
         with c1:
-            new_c = st.text_input("إضافة لون")
+            new_col = st.text_input("أضف لون جديد")
             if st.button("حفظ اللون"):
-                st.session_state.tshirt_colors.append(new_c); st.rerun()
-                
-            new_cat = st.text_input("إضافة قسم")
-            if st.button("حفظ القسم"):
-                st.session_state.categories.append(new_cat)
-                st.session_state.catalog_images[new_cat] = []
+                st.session_state.tshirt_colors.append(new_col)
                 st.rerun()
-        
         with c2:
-            st.subheader("رفع صور للكتالوج")
-            target = st.selectbox("للقسم:", st.session_state.categories)
-            files = st.file_uploader("اختر الصور", accept_multiple_files=True)
-            if st.button("رفع الصور"):
-                if files:
-                    for f in files:
-                        processed = process_image(f)
-                        st.session_state.catalog_images[target].append(processed)
-                    st.success("تم الرفع")
+            new_c = st.text_input("أضف قسم جديد")
+            if st.button("حفظ القسم"):
+                st.session_state.categories.append(new_c)
+                st.session_state.catalog_images[new_c] = [] # تجهيز القسم لاستقبال صور
+                st.rerun()
