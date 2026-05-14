@@ -1,4 +1,4 @@
- import streamlit as st
+import streamlit as st
 
 # 1. إعدادات المتصفح ومحركات البحث
 st.set_page_config(
