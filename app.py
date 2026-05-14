@@ -4,74 +4,89 @@ import pandas as pd
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="SAWA Shop", page_icon="👕", layout="wide")
 
-# 2. تهيئة الذاكرة لتخزين الطلبات (لو مش موجودة)
-if 'orders_list' not in st.session_state:
-    st.session_state.orders_list = []
+# 2. تهيئة مخزن البيانات المؤقت (بيتحفظ طول ما الموقع شغال)
+if 'orders' not in st.session_state:
+    st.session_state.orders = []
 
-# القائمة الجانبية للتنقل
-page = st.sidebar.selectbox("اختار الصفحة", ["متجر الزبائن (SAWA Shop)", "لوحة تحكم الإدارة"])
+# القائمة الجانبية
+page = st.sidebar.radio("انتقل إلى:", ["🛍️ متجر الزبائن", "⚙️ لوحة الإدارة الشاملة"])
 
-# --- الصفحة الأولى: متجر الزبائن ---
-if page == "متجر الزبائن (SAWA Shop)":
-    st.title("🛍️ SAWA Shop - اطلب تيشيرتك الآن")
+# --- صفحة الزبائن ---
+if page == "🛍️ متجر الزبائن":
+    st.title("🛍️ SAWA Shop - اطلب الآن")
+    st.write("أهلاً بك في متجرنا! صمم تيشيرتك المفضل.")
     
-    col1, col2 = st.columns(2)
-    with col1:
-        color = st.selectbox("اختار لون التيشيرت", ["أبيض", "أسود", "رمادي", "كحلي"])
-        size = st.select_slider("اختار المقاس", options=["S", "M", "L", "XL", "XXL"])
-        design = st.file_uploader("ارفع الصورة اللي عايز تطبعها", type=['png', 'jpg', 'jpeg'])
-        
-    with col2:
-        customer_name = st.text_input("اسمك بالكامل")
-        phone_number = st.text_input("رقم الموبايل")
-        quantity = st.number_input("عدد القطع", min_value=1, value=1)
+    with st.container():
+        col1, col2 = st.columns(2)
+        with col1:
+            name = st.text_input("الاسم بالكامل")
+            phone = st.text_input("رقم الموبايل (واتساب)")
+            color = st.selectbox("اختار لون التيشيرت", ["أبيض", "أسود", "رمادي", "كحلي"])
+            
+        with col2:
+            size = st.select_slider("المقاس", options=["S", "M", "L", "XL", "XXL"])
+            qty = st.number_input("الكمية", min_value=1, value=1)
+            notes = st.text_area("ملاحظات خاصة بالتصميم")
 
-    if st.button("إرسال الأوردر"):
-        if customer_name and phone_number:
-            # إضافة البيانات للذاكرة عشان تظهر للإدارة
-            new_order = {
-                "الاسم": customer_name,
-                "الموبايل": phone_number,
+    if st.button("تأكيد الطلب 🚀"):
+        if name and phone:
+            # إضافة الأوردر للذاكرة
+            st.session_state.orders.append({
+                "الاسم": name,
+                "الموبايل": phone,
                 "اللون": color,
                 "المقاس": size,
-                "الكمية": quantity,
-                "الحالة": "قيد التنفيذ"
-            }
-            st.session_state.orders_list.append(new_order)
-            
-            st.success(f"شكراً يا {customer_name}! تم إرسال طلبك للإدارة بنجاح.")
+                "الكمية": qty,
+                "الحالة": "جديد 🆕"
+            })
+            st.success(f"ألف مبروك يا {name}! طلبك وصل للإدارة.")
             st.balloons()
         else:
-            st.warning("من فضلك اكتب الاسم ورقم الموبايل")
+            st.warning("من فضلك اكتب اسمك ورقم موبايلك")
 
-# --- الصفحة الثانية: لوحة الإدارة ---
+# --- صفحة الإدارة الاحترافية ---
 else:
     st.title("📊 لوحة تحكم SAWA Shop")
     
-    # عرض الطلبات الواردة من الزبائن
-    st.header("📥 الطلبات الجديدة (من صفحة الزبائن)")
+    # 1. ملخص سريع (Metrics)
+    total_orders = len(st.session_state.orders)
+    total_pieces = sum(item['الكمية'] for item in st.session_state.orders)
     
-    if len(st.session_state.orders_list) > 0:
-        # تحويل القائمة لجدول منظم
-        df = pd.DataFrame(st.session_state.orders_list)
-        st.table(df)
-        
-        if st.button("مسح جميع الطلبات"):
-            st.session_state.orders_list = []
-            st.rerun()
-    else:
-        st.info("لا توجد طلبات جديدة حالياً.")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("إجمالي الطلبات", f"{total_orders} أوردر")
+    c2.metric("إجمالي القطع", f"{total_pieces} قطعة")
+    # افتراض ربح 100 جنيه في القطعة
+    c3.metric("الأرباح المتوقعة", f"{total_pieces * 100} ج.م")
 
     st.divider()
-    
-    # إعدادات المخزن (الحسابات اللي عملناها قبل كدة)
-    st.header("📦 إدارة التكاليف والمخزن")
-    cost_plain = st.sidebar.number_input("سعر التيشرت السادة", value=150.0)
-    cost_printing = st.sidebar.number_input("تكلفة الطباعة", value=50.0)
-    
-    selling_price = st.number_input("سعر البيع الافتراضي", value=300.0)
-    
-    if len(st.session_state.orders_list) > 0:
-        total_revenue = len(st.session_state.orders_list) * selling_price
-        total_cost = len(st.session_state.orders_list) * (cost_plain + cost_printing)
-        st.metric("إجمالي أرباح الطلبات الحالية", f"{total_revenue - total_cost} EGP")
+
+    # 2. عرض وإدارة الجدول
+    st.subheader("📋 قائمة الطلبات الحالية")
+    if total_orders > 0:
+        df = pd.DataFrame(st.session_state.orders)
+        
+        # جدول تفاعلي يتيح لك تعديل الحالة أو البيانات
+        edited_df = st.data_editor(df, use_container_width=True, num_rows="dynamic")
+        
+        if st.button("حفظ التعديلات"):
+            st.session_state.orders = edited_df.to_dict('records')
+            st.success("تم تحديث البيانات بنجاح!")
+            
+        if st.button("مسح كل البيانات 🗑️"):
+            st.session_state.orders = []
+            st.rerun()
+    else:
+        st.info("لا توجد طلبات مسجلة حتى الآن.")
+
+    st.divider()
+
+    # 3. تحليل سريع للمخزن (Charts بسيطة)
+    if total_orders > 0:
+        st.subheader("📈 تحليل الطلبات")
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.write("الألوان المطلوبة")
+            st.bar_chart(df['اللون'].value_counts())
+        with col_b:
+            st.write("المقاسات المطلوبة")
+            st.bar_chart(df['المقاس'].value_counts())
