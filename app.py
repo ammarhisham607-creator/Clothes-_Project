@@ -1,18 +1,21 @@
 import streamlit as st
+import pandas as pd
 
-# 1. إعدادات الصفحة والهوية الجديدة
+# 1. إعدادات الصفحة
 st.set_page_config(page_title="SAWA Shop", page_icon="👕", layout="wide")
 
-# القائمة الجانبية للتنقل بين الصفحات
+# 2. تهيئة الذاكرة لتخزين الطلبات (لو مش موجودة)
+if 'orders_list' not in st.session_state:
+    st.session_state.orders_list = []
+
+# القائمة الجانبية للتنقل
 page = st.sidebar.selectbox("اختار الصفحة", ["متجر الزبائن (SAWA Shop)", "لوحة تحكم الإدارة"])
 
 # --- الصفحة الأولى: متجر الزبائن ---
 if page == "متجر الزبائن (SAWA Shop)":
     st.title("🛍️ SAWA Shop - اطلب تيشيرتك الآن")
-    st.write("صمم تيشيرتك المفضل بخطوات بسيطة")
     
     col1, col2 = st.columns(2)
-    
     with col1:
         color = st.selectbox("اختار لون التيشيرت", ["أبيض", "أسود", "رمادي", "كحلي"])
         size = st.select_slider("اختار المقاس", options=["S", "M", "L", "XL", "XXL"])
@@ -20,35 +23,55 @@ if page == "متجر الزبائن (SAWA Shop)":
         
     with col2:
         customer_name = st.text_input("اسمك بالكامل")
-        phone_number = st.text_input("رقم الموبايل (واتساب)")
-        notes = st.text_area("أي ملاحظات إضافية؟")
+        phone_number = st.text_input("رقم الموبايل")
+        quantity = st.number_input("عدد القطع", min_value=1, value=1)
 
     if st.button("إرسال الأوردر"):
-        if customer_name and phone_number and design:
-            st.success(f"شكراً يا {customer_name}! تم استلام طلبك.")
-            st.balloons()
+        if customer_name and phone_number:
+            # إضافة البيانات للذاكرة عشان تظهر للإدارة
+            new_order = {
+                "الاسم": customer_name,
+                "الموبايل": phone_number,
+                "اللون": color,
+                "المقاس": size,
+                "الكمية": quantity,
+                "الحالة": "قيد التنفيذ"
+            }
+            st.session_state.orders_list.append(new_order)
             
-            # زر إرسال للواتساب (تعديل رقمك هنا)
-            whatsapp_msg = f"أوردر جديد من SAWA Shop:%0Aالاسم: {customer_name}%0Aاللون: {color}%0Aالمقاس: {size}%0Aالموبايل: {phone_number}"
-            # استبدل 201000000000 برقمك الحقيقي يبدأ بكود الدولة
-            wa_url = f"https://wa.me/201234567890?text={whatsapp_msg}" 
-            st.markdown(f'[اضغط هنا لتأكيد الأوردر عبر واتساب]({wa_url})')
+            st.success(f"شكراً يا {customer_name}! تم إرسال طلبك للإدارة بنجاح.")
+            st.balloons()
         else:
-            st.warning("من فضلك كمل البيانات وارفع التصميم")
+            st.warning("من فضلك اكتب الاسم ورقم الموبايل")
 
-# --- الصفحة الثانية: لوحة الإدارة (نفس الكود السابق) ---
+# --- الصفحة الثانية: لوحة الإدارة ---
 else:
-    st.title("📊 SAWA Shop Dashboard (Management)")
+    st.title("📊 لوحة تحكم SAWA Shop")
     
-    st.sidebar.header("📦 Inventory Settings")
-    cost_plain = st.sidebar.number_input("سعر التيشرت السادة", min_value=0.0, value=150.0)
-    cost_printing = st.sidebar.number_input("تكلفة الطباعة", min_value=0.0, value=50.0)
-    initial_stock = st.sidebar.number_input("الكمية المتوفرة", min_value=0, value=50)
+    # عرض الطلبات الواردة من الزبائن
+    st.header("📥 الطلبات الجديدة (من صفحة الزبائن)")
     
-    st.header("🛒 تسجيل أوردر داخلي")
-    # باقي حساباتك القديمة هنا..
-    selling_price = st.number_input("سعر البيع", min_value=0.0, value=300.0)
-    quantity = st.number_input("الكمية", min_value=1, value=1)
+    if len(st.session_state.orders_list) > 0:
+        # تحويل القائمة لجدول منظم
+        df = pd.DataFrame(st.session_state.orders_list)
+        st.table(df)
+        
+        if st.button("مسح جميع الطلبات"):
+            st.session_state.orders_list = []
+            st.rerun()
+    else:
+        st.info("لا توجد طلبات جديدة حالياً.")
+
+    st.divider()
     
-    profit = (selling_price - (cost_plain + cost_printing)) * quantity
-    st.metric("صافي الربح المتوقع", f"{profit} EGP")
+    # إعدادات المخزن (الحسابات اللي عملناها قبل كدة)
+    st.header("📦 إدارة التكاليف والمخزن")
+    cost_plain = st.sidebar.number_input("سعر التيشرت السادة", value=150.0)
+    cost_printing = st.sidebar.number_input("تكلفة الطباعة", value=50.0)
+    
+    selling_price = st.number_input("سعر البيع الافتراضي", value=300.0)
+    
+    if len(st.session_state.orders_list) > 0:
+        total_revenue = len(st.session_state.orders_list) * selling_price
+        total_cost = len(st.session_state.orders_list) * (cost_plain + cost_printing)
+        st.metric("إجمالي أرباح الطلبات الحالية", f"{total_revenue - total_cost} EGP")
