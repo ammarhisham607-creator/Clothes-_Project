@@ -1,60 +1,54 @@
 import streamlit as st
 
-# 1. إعدادات المتصفح ومحركات البحث
-st.set_page_config(
-    page_title="SAWA Shop - Clothing Management",
-    page_icon="👕",
-    layout="wide"
-)
+# 1. إعدادات الصفحة والهوية الجديدة
+st.set_page_config(page_title="SAWA Shop", page_icon="👕", layout="wide")
 
-# 2. واجهة الموقع الرئيسية
-st.title("👕 SAWA Shop Dashboard")
-st.subheader("نظام إدارة مبيعات الملابس")
+# القائمة الجانبية للتنقل بين الصفحات
+page = st.sidebar.selectbox("اختار الصفحة", ["متجر الزبائن (SAWA Shop)", "لوحة تحكم الإدارة"])
 
-# 3. القائمة الجانبية (Sidebar)
-st.sidebar.header("📦 Inventory Settings")
-cost_plain = st.sidebar.number_input("سعر التيشرت السادة", min_value=0.0, value=150.0)
-cost_printing = st.sidebar.number_input("تكلفة الطباعة", min_value=0.0, value=50.0)
-initial_stock = st.sidebar.number_input("الكمية المتوفرة", min_value=0, value=50)
-alert_limit = st.sidebar.slider("تنبيه النواقص", 1, 20, 5)
+# --- الصفحة الأولى: متجر الزبائن ---
+if page == "متجر الزبائن (SAWA Shop)":
+    st.title("🛍️ SAWA Shop - اطلب تيشيرتك الآن")
+    st.write("صمم تيشيرتك المفضل بخطوات بسيطة")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        color = st.selectbox("اختار لون التيشيرت", ["أبيض", "أسود", "رمادي", "كحلي"])
+        size = st.select_slider("اختار المقاس", options=["S", "M", "L", "XL", "XXL"])
+        design = st.file_uploader("ارفع الصورة اللي عايز تطبعها", type=['png', 'jpg', 'jpeg'])
+        
+    with col2:
+        customer_name = st.text_input("اسمك بالكامل")
+        phone_number = st.text_input("رقم الموبايل (واتساب)")
+        notes = st.text_area("أي ملاحظات إضافية؟")
 
-# 4. تسجيل الطلبات (Orders)
-st.header("🛒 Create New Order")
-col1, col2, col3 = st.columns(3)
+    if st.button("إرسال الأوردر"):
+        if customer_name and phone_number and design:
+            st.success(f"شكراً يا {customer_name}! تم استلام طلبك.")
+            st.balloons()
+            
+            # زر إرسال للواتساب (تعديل رقمك هنا)
+            whatsapp_msg = f"أوردر جديد من SAWA Shop:%0Aالاسم: {customer_name}%0Aاللون: {color}%0Aالمقاس: {size}%0Aالموبايل: {phone_number}"
+            # استبدل 201000000000 برقمك الحقيقي يبدأ بكود الدولة
+            wa_url = f"https://wa.me/201234567890?text={whatsapp_msg}" 
+            st.markdown(f'[اضغط هنا لتأكيد الأوردر عبر واتساب]({wa_url})')
+        else:
+            st.warning("من فضلك كمل البيانات وارفع التصميم")
 
-with col1:
-    customer_name = st.text_input("اسم الزبون")
-with col2:
+# --- الصفحة الثانية: لوحة الإدارة (نفس الكود السابق) ---
+else:
+    st.title("📊 SAWA Shop Dashboard (Management)")
+    
+    st.sidebar.header("📦 Inventory Settings")
+    cost_plain = st.sidebar.number_input("سعر التيشرت السادة", min_value=0.0, value=150.0)
+    cost_printing = st.sidebar.number_input("تكلفة الطباعة", min_value=0.0, value=50.0)
+    initial_stock = st.sidebar.number_input("الكمية المتوفرة", min_value=0, value=50)
+    
+    st.header("🛒 تسجيل أوردر داخلي")
+    # باقي حساباتك القديمة هنا..
     selling_price = st.number_input("سعر البيع", min_value=0.0, value=300.0)
-with col3:
-    quantity_sold = st.number_input("الكمية", min_value=1, value=1)
-
-design_file = st.file_uploader("ارفع صورة التصميم", type=['png', 'jpg', 'jpeg'])
-
-# 5. الحسابات التلقائية
-total_cost_per_piece = cost_plain + cost_printing
-profit_per_piece = selling_price - total_cost_per_piece
-total_profit = profit_per_piece * quantity_sold
-remaining_stock = initial_stock - quantity_sold
-
-# 6. عرض النتائج والتقارير
-st.divider()
-st.subheader("📊 Profit & Stock Summary")
-
-m1, m2, m3 = st.columns(3)
-m1.metric("Net Profit (صافي الربح)", f"{total_profit} EGP")
-m2.metric("Total Cost (التكلفة)", f"{total_cost_per_piece * quantity_sold} EGP")
-m3.metric("Remaining Stock (المخزن)", f"{remaining_stock} pcs")
-
-# نظام التنبيهات
-if remaining_stock <= alert_limit:
-    st.error(f"🚨 Warning: Stock is low! ({remaining_stock} pcs left)")
-
-# زر الحفظ
-if st.button("Save Order"):
-    if customer_name:
-        st.success(f"Order for {customer_name} has been saved to SAWA Shop system!")
-        if design_file:
-            st.image(design_file, caption=f"Design for {customer_name}", width=300)
-    else:
-        st.warning("Please enter customer name")
+    quantity = st.number_input("الكمية", min_value=1, value=1)
+    
+    profit = (selling_price - (cost_plain + cost_printing)) * quantity
+    st.metric("صافي الربح المتوقع", f"{profit} EGP")
