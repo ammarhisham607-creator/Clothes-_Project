@@ -42,8 +42,8 @@ def load_orders_from_github():
         return pd.DataFrame(columns=["الاسم", "الموبايل", "اللون", "المقاس", "الكمية", "رابط_التصميم", "التاريخ"])
 
 # --- واجهة موقع SAWA Shop --- [cite: user_summary]
-st.title("🛍️ متجر SAWA Shop الإلكتروني") [cite: user_summary]
-st.subheader("تصاميم ملابس مخصصة وعصرية") [cite: user_summary]
+st.title("🛍️ متجر SAWA Shop الإلكتروني") 
+st.subheader("تصاميم ملابس مخصصة وعصرية") 
 st.divider()
 
 # القائمة الجانبية للتنقل
