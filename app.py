@@ -6,7 +6,7 @@ import io
 import datetime
 
 # 1. إعدادات الصفحة واسم المتجر في محرك البحث
-st.set_page_config(page_title="SAWA Shop - متجر ملابس وتصاميم مطبوعة", layout="wide") [cite: user_summary]
+st.set_page_config(page_title="SAWA Shop - متجر ملابس وتصاميم مطبوعة", layout="wide")
 
 # 2. كود التحقق التلقائي الخاص بجوجل (SEO)
 if "GOOGLE_VERIFICATION" in st.secrets:
