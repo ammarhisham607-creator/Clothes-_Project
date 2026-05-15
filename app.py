@@ -1,118 +1,106 @@
 import streamlit as st
 import pandas as pd
+from github import Github
 from PIL import Image
 import io
+import datetime
 
-# 1. إعدادات الصفحة
-st.set_page_config(page_title="SAWA Shop", page_icon="👕", layout="wide")
+# إعدادات الصفحة
+st.set_page_config(page_title="SAWA Shop", layout="wide")
 
-# 2. تهيئة البيانات بشكل سليم
-if 'orders' not in st.session_state:
-    st.session_state.orders = []
-if 'categories' not in st.session_state:
-    st.session_state.categories = ["جيم 💪", "حيوانات 🦁"]
-if 'catalog_images' not in st.session_state:
-    st.session_state.catalog_images = {cat: [] for cat in st.session_state.categories}
-if 'tshirt_colors' not in st.session_state:
-    st.session_state.tshirt_colors = ["أبيض", "أسود", "رمادي", "كحلي"]
+# الاتصال بـ GitHub
+try:
+    g = Github(st.secrets["GITHUB_TOKEN"])
+    repo = g.get_repo(st.secrets["GITHUB_REPO"])
+except:
+    st.error("فيه مشكلة في مفاتيح اتصال GitHub في الـ Secrets!")
 
-# 3. وظيفة معالجة الصور (تصغير وتقليل جودة لسرعة الموقع)
-def process_and_save(uploaded_file):
+# دالة لرفع الملفات لـ GitHub
+def upload_to_github(file_bytes, file_path, commit_message):
     try:
-        img = Image.open(uploaded_file)
-        if img.mode in ("RGBA", "P"):
-            img = img.convert("RGB")
-        # تصغير الصورة لحجم معقول جداً
-        img.thumbnail((400, 400))
-        return img
+        # لو الملف موجود قبل كده بنحدثه، لو مش موجود بنعمله جديد
+        try:
+            contents = repo.get_contents(file_path)
+            repo.update_file(contents.path, commit_message, file_bytes, contents.sha)
+        except:
+            repo.create_file(file_path, commit_message, file_bytes)
+        return True
     except Exception as e:
-        st.error(f"خطأ في معالجة الصورة: {e}")
-        return None
+        st.error(f"خطأ أثناء الحفظ على جيت هاب: {e}")
+        return False
 
-# القائمة الجانبية
-page = st.sidebar.radio("انتقل إلى:", ["🛍️ متجر الزبائن", "⚙️ لوحة الإدارة"])
+# دالة لقراءة الأوردرات من GitHub
+def load_orders_from_github():
+    try:
+        contents = repo.get_contents("orders.csv")
+        df = pd.read_csv(io.StringIO(contents.decoded_content.decode('utf-8')))
+        return df
+    except:
+        # لو الملف مش موجود نرجع جدول فاضي بالعامدة اللي محتاجينها
+        return pd.DataFrame(columns=["الاسم", "الموبايل", "اللون", "المقاس", "الكمية", "رابط_التصميم", "التاريخ"])
 
 # --- صفحة الزبائن ---
-if page == "🛍️ متجر الزبائن":
-    st.markdown("<h1 style='text-align: right;'>SAWA Shop - متجر الزبائن</h1>", unsafe_allow_html=True)
-    
+st.title("🛍️ متجر SAWA Shop")
+page = sidebar_entry = st.sidebar.radio("القائمة", ["متجر الزبائن", "لوحة الإدارة"])
+
+if page == "متجر الزبائن":
     col1, col2 = st.columns(2)
     with col1:
-        name = st.text_input("الاسم")
-        phone = st.text_input("الموبايل")
-        color = st.selectbox("لون التيشيرت", st.session_state.tshirt_colors)
-        size = st.selectbox("المقاس", ["S", "M", "L", "XL", "XXL"])
-        qty = st.number_input("الكمية", min_value=1)
-
+        name = st.text_input("الاسم بالكامل")
+        phone = st.text_input("رقم الواتساب")
+        color = st.selectbox("اللون", ["أسود", "أبيض", "رمادي"])
+        size = st.selectbox("المقاس", ["M", "L", "XL", "XXL"])
+        qty = st.number_input("الكمية", min_value=1, step=1)
+    
     with col2:
-        source = st.radio("اختر التصميم من:", ["الكتالوج", "رفع خاص"])
-        final_design = None
-        
-        if source == "الكتالوج":
-            cat = st.selectbox("القسم", st.session_state.categories)
-            imgs = st.session_state.catalog_images.get(cat, [])
-            if imgs:
-                idx = st.select_slider("اختر صورة التصميم", options=range(len(imgs)), format_func=lambda x: f"صورة {x+1}")
-                st.image(imgs[idx], width=200)
-                final_design = f"قسم {cat} - صورة {idx+1}"
-            else:
-                st.warning("هذا القسم لا يحتوي على صور.")
+        uploaded_file = st.file_uploader("ارفع تصميمك هنا (صورة)", type=["png", "jpg", "jpeg"])
+    
+    if st.button("تأكيد الأوردر 🚀"):
+        if name and phone and uploaded_file:
+            time_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            file_extension = uploaded_file.name.split(".")[-1]
+            github_img_path = f"customer_designs/{time_str}_{phone}.{file_extension}"
+            
+            # 1. ارفع الصورة على جيت هاب
+            with st.spinner("جاري رفع التصميم..."):
+                img_success = upload_to_github(uploaded_file.getvalue(), github_img_path, f"Upload design for {name}")
+            
+            if img_success:
+                # 2. سجل الأوردر في ملف الـ CSV
+                df_orders = load_orders_from_github()
+                img_url = f"https://raw.githubusercontent.com/{st.secrets['GITHUB_REPO']}/main/{github_img_path}"
+                
+                new_row = {
+                    "الاسم": name, "الموبايل": phone, "اللون": color, 
+                    "المقاس": size, "الكمية": qty, "رابط_التصميم": img_url,
+                    "التاريخ": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+                }
+                
+                df_orders = pd.concat([df_orders, pd.DataFrame([new_row])], ignore_index=True)
+                
+                # حفظ الملف المحدث على جيت هاب
+                csv_buffer = io.StringIO()
+                df_orders.to_csv(csv_buffer, index=False)
+                upload_to_github(csv_buffer.getvalue().encode('utf-8'), "orders.csv", f"Add order for {name}")
+                
+                st.success("تم تسجيل أوردرك بنجاح وحفظه!")
+                st.balloons()
         else:
-            up = st.file_uploader("ارفع صورتك", type=['jpg', 'jpeg', 'png'])
-            if up: final_design = "تصميم خاص مرفوع"
-
-    if st.button("تأكيد الطلب ✨"):
-        if name and phone and final_design:
-            st.session_state.orders.append({
-                "الاسم": name, "الموبايل": phone, "اللون": color, 
-                "المقاس": size, "الكمية": qty, "التصميم": final_design, "الحالة": "جديد"
-            })
-            st.success("تم إرسال الأوردر بنجاح!")
-            st.balloons()
+            st.error("برجاء كتابة البيانات ورفع الصورة أولاً!")
 
 # --- صفحة الإدارة ---
 else:
-    st.title("⚙️ لوحة الإدارة")
-    t1, t2 = st.tabs(["📥 الأوردرات", "🎨 إضافة محتوى"])
+    st.header("📊 لوحة إدارة الطلبات")
+    df_orders = load_orders_from_github()
     
-    with t1:
-        if st.session_state.orders:
-            st.table(pd.DataFrame(st.session_state.orders))
-            if st.button("مسح كل الأوردرات"):
-                st.session_state.orders = []
-                st.rerun()
-        else:
-            st.info("لا توجد أوردرات.")
-
-    with t2:
-        st.subheader("رفع صور للكتالوج")
-        target_cat = st.selectbox("اختار القسم", st.session_state.categories)
-        files = st.file_uploader("اختار الصور لرفعها", accept_multiple_files=True, type=['jpg', 'png', 'jpeg'])
+    if not df_orders.empty:
+        st.dataframe(df_orders, use_container_width=True)
         
-        if st.button("تأكيد رفع الصور"):
-            if files:
-                # التأكد من وجود المفتاح في القاموس لتجنب الايرور
-                if target_cat not in st.session_state.catalog_images:
-                    st.session_state.catalog_images[target_cat] = []
-                
-                for f in files:
-                    processed_img = process_and_save(f)
-                    if processed_img:
-                        st.session_state.catalog_images[target_cat].append(processed_img)
-                st.success(f"تم إضافة {len(files)} صور لقسم {target_cat} بنجاح!")
-            else:
-                st.error("يرجى اختيار ملفات أولاً.")
-        
-        st.divider()
-        c1, c2 = st.columns(2)
-        with c1:
-            new_col = st.text_input("أضف لون جديد")
-            if st.button("حفظ اللون"):
-                st.session_state.tshirt_colors.append(new_col)
-                st.rerun()
-        with c2:
-            new_c = st.text_input("أضف قسم جديد")
-            if st.button("حفظ القسم"):
-                st.session_state.categories.append(new_c)
-                st.session_state.catalog_images[new_c] = [] # تجهيز القسم لاستقبال صور
-                st.rerun()
+        st.subheader("🖼️ استعراض تصاميم الزبائن للأوردرات")
+        for idx, row in df_orders.iterrows():
+            st.write(f"**الزبون:** {row['الاسم']} | **موبايل:** {row['الموبايل']}")
+            st.image(row['رابط_التصميم'], width=200)
+            st.markdown(f"[فتح الصورة بحجمها الأصلي]({row['رابط_التصميم']})")
+            st.divider()
+    else:
+        st.info("لا توجد أوردرات مسجلة حتى الآن.")
