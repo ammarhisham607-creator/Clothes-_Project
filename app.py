@@ -5,20 +5,24 @@ from PIL import Image
 import io
 import datetime
 
-# إعدادات الصفحة
-st.set_page_config(page_title="SAWA Shop", layout="wide")
+# 1. إعدادات الصفحة واسم المتجر في محرك البحث
+st.set_page_config(page_title="SAWA Shop - متجر ملابس وتصاميم مطبوعة", layout="wide") [cite: user_summary]
 
-# الاتصال بـ GitHub
+# 2. كود التحقق التلقائي الخاص بجوجل (SEO)
+if "GOOGLE_VERIFICATION" in st.secrets:
+    st.markdown(st.secrets["GOOGLE_VERIFICATION"], unsafe_allow_html=True)
+
+# 3. الاتصال بـ GitHub بأمان عبر الـ Secrets
 try:
     g = Github(st.secrets["GITHUB_TOKEN"])
     repo = g.get_repo(st.secrets["GITHUB_REPO"])
-except:
-    st.error("فيه مشكلة في مفاتيح اتصال GitHub في الـ Secrets!")
+except Exception as e:
+    st.error("تنبيه للإدارة: هناك مشكلة في مفاتيح اتصال GitHub في الـ Secrets!")
 
-# دالة لرفع الملفات لـ GitHub
+# دالة مخصصة لرفع الملفات والصور إلى مستودع GitHub
 def upload_to_github(file_bytes, file_path, commit_message):
     try:
-        # لو الملف موجود قبل كده بنحدثه، لو مش موجود بنعمله جديد
+        # لو الملف موجود مسبقاً بنحدثه، لو جديد بننشأه
         try:
             contents = repo.get_contents(file_path)
             repo.update_file(contents.path, commit_message, file_bytes, contents.sha)
@@ -29,44 +33,55 @@ def upload_to_github(file_bytes, file_path, commit_message):
         st.error(f"خطأ أثناء الحفظ على جيت هاب: {e}")
         return False
 
-# دالة لقراءة الأوردرات من GitHub
+# دالة لقراءة سجل الأوردرات الحالي من GitHub
 def load_orders_from_github():
     try:
         contents = repo.get_contents("orders.csv")
         df = pd.read_csv(io.StringIO(contents.decoded_content.decode('utf-8')))
         return df
     except:
-        # لو الملف مش موجود نرجع جدول فاضي بالعامدة اللي محتاجينها
+        # لو الملف لسه ممش موجود، بنعمل جدول جديد بالتقسيم المظبوط
         return pd.DataFrame(columns=["الاسم", "الموبايل", "اللون", "المقاس", "الكمية", "رابط_التصميم", "التاريخ"])
 
-# --- صفحة الزبائن ---
-st.title("🛍️ متجر SAWA Shop")
-page = sidebar_entry = st.sidebar.radio("القائمة", ["متجر الزبائن", "لوحة الإدارة"])
+# --- تصميم واجهة موقع SAWA Shop --- [cite: user_summary]
+st.title("🛍️ متجر SAWA Shop الإلكتروني") [cite: user_summary]
+st.subheader("تصاميم ملابس مخصصة وعصرية") [cite: user_summary]
+st.divider()
 
-if page == "متجر الزبائن":
+# القائمة الجانبية للتنقل
+page = st.sidebar.radio("انتقل إلى:", ["متجر الزبائن (طلب أوردر)", "لوحة الإدارة (خاص بعمار)"])
+
+# --- القسم الأول: متجر الزبائن ---
+if page == "متجر الزبائن (طلب أوردر)":
+    st.markdown("### 👕 صمم تيشيرتك بنفسك واطلب الآن")
+    
     col1, col2 = st.columns(2)
     with col1:
-        name = st.text_input("الاسم بالكامل")
-        phone = st.text_input("رقم الواتساب")
-        color = st.selectbox("اللون", ["أسود", "أبيض", "رمادي"])
-        size = st.selectbox("المقاس", ["M", "L", "XL", "XXL"])
-        qty = st.number_input("الكمية", min_value=1, step=1)
+        name = st.text_input("اسمك الكريم بالكامل:")
+        phone = st.text_input("رقم الواتساب (للتواصل وتأكيد الأوردر):")
+        color = st.selectbox("اختر لون التيشيرت:", ["أسود", "أبيض", "رمادي"]) [cite: user_summary]
+        size = st.selectbox("اختر المقاس المناسب:", ["M", "L", "XL", "XXL"]) [cite: user_summary]
+        qty = st.number_input("الكمية المطلوبة:", min_value=1, step=1)
     
     with col2:
-        uploaded_file = st.file_uploader("ارفع تصميمك هنا (صورة)", type=["png", "jpg", "jpeg"])
-    
-    if st.button("تأكيد الأوردر 🚀"):
+        uploaded_file = st.file_uploader("ارفع التصميم أو الصورة المراد طباعتها هنا:", type=["png", "jpg", "jpeg"]) [cite: user_summary]
+        if uploaded_file is not None:
+            st.image(uploaded_file, caption="معاينة التصميم المرفوع", width=250)
+
+    st.markdown("---")
+    if st.button("إرسال وتأكيد الأوردر للمصنع 🚀"):
         if name and phone and uploaded_file:
+            # توليد اسم فريد للصورة بناءً على وقت الطلب ورقم التليفون لعدم التداخل
             time_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             file_extension = uploaded_file.name.split(".")[-1]
             github_img_path = f"customer_designs/{time_str}_{phone}.{file_extension}"
             
-            # 1. ارفع الصورة على جيت هاب
-            with st.spinner("جاري رفع التصميم..."):
+            with st.spinner("جاري حفظ وتأمين تصميمك أونلاين..."):
+                # 1. رفع ملف الصورة إلى فولدر مستقل على GitHub
                 img_success = upload_to_github(uploaded_file.getvalue(), github_img_path, f"Upload design for {name}")
             
             if img_success:
-                # 2. سجل الأوردر في ملف الـ CSV
+                # 2. تجهيز البيانات النصية وحفظها في الشيت
                 df_orders = load_orders_from_github()
                 img_url = f"https://raw.githubusercontent.com/{st.secrets['GITHUB_REPO']}/main/{github_img_path}"
                 
@@ -78,29 +93,40 @@ if page == "متجر الزبائن":
                 
                 df_orders = pd.concat([df_orders, pd.DataFrame([new_row])], ignore_index=True)
                 
-                # حفظ الملف المحدث على جيت هاب
+                # تحويل الجدول المحدث إلى نص CSV ورفعه لـ GitHub
                 csv_buffer = io.StringIO()
                 df_orders.to_csv(csv_buffer, index=False)
                 upload_to_github(csv_buffer.getvalue().encode('utf-8'), "orders.csv", f"Add order for {name}")
                 
-                st.success("تم تسجيل أوردرك بنجاح وحفظه!")
+                st.success("يا فنان، أوردرك وتصميمك وصلوا لنا بنجاح! هنتواصل معاك على الواتساب فوراً. 🎉")
                 st.balloons()
         else:
-            st.error("برجاء كتابة البيانات ورفع الصورة أولاً!")
+            st.error("من فضلك، تأكد من كتابة الاسم ورقم الموبايل ورفع صورة التصميم أولاً!")
 
-# --- صفحة الإدارة ---
+# --- القسم الثاني: لوحة الإدارة ---
 else:
-    st.header("📊 لوحة إدارة الطلبات")
+    st.markdown("### 📊 لوحة تحكم وإدارة طلبات SAWA Shop") [cite: user_summary]
     df_orders = load_orders_from_github()
     
     if not df_orders.empty:
+        # عرض جدول البيانات بالكامل
         st.dataframe(df_orders, use_container_width=True)
         
-        st.subheader("🖼️ استعراض تصاميم الزبائن للأوردرات")
+        st.divider()
+        st.markdown("### 🖼️ استعراض وتحميل تصاميم الزبائن للأوردرات")
+        
+        # عرض منفصل لكل أوردر بالصورة بتاعته عشان تسحبها للطباعة علطول
         for idx, row in df_orders.iterrows():
-            st.write(f"**الزبون:** {row['الاسم']} | **موبايل:** {row['الموبايل']}")
-            st.image(row['رابط_التصميم'], width=200)
-            st.markdown(f"[فتح الصورة بحجمها الأصلي]({row['رابط_التصميم']})")
-            st.divider()
+            with st.container():
+                col_txt, col_img = st.columns([2, 1])
+                with col_txt:
+                    st.write(f"👤 **العميل:** {row['الاسم']}")
+                    st.write(f"📞 **واتساب:** {row['الموبايل']}")
+                    st.write(f"🎨 **المواصفات:** لون {row['اللون']} | مقاس {row['المقاس']} | عدد {row['الكمية']} قطع")
+                    st.write(f"📅 **التاريخ:** {row['التاريخ']}")
+                    st.markdown(f"[📥 تحميل الصورة الأصلية بجودة عالية]({row['رابط_التصميم']})")
+                with col_img:
+                    st.image(row['رابط_التصميم'], width=180)
+                st.divider()
     else:
-        st.info("لا توجد أوردرات مسجلة حتى الآن.")
+        st.info("لا توجد أوردرات مسجلة في قاعدة البيانات حتى الآن.")
