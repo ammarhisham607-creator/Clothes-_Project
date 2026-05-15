@@ -57,12 +57,12 @@ if page == "متجر الزبائن (طلب أوردر)":
     with col1:
         name = st.text_input("اسمك الكريم بالكامل:")
         phone = st.text_input("رقم الواتساب (للتواصل وتأكيد الأوردر):")
-        color = st.selectbox("اختر لون التيشيرت:", ["أسود", "أبيض", "رمادي"]) [cite: user_summary]
-        size = st.selectbox("اختر المقاس المناسب:", ["M", "L", "XL", "XXL"]) [cite: user_summary]
+        color = st.selectbox("اختر لون التيشيرت:", ["أسود", "أبيض", "رمادي"])
+        size = st.selectbox("اختر المقاس المناسب:", ["M", "L", "XL", "XXL"]) 
         qty = st.number_input("الكمية المطلوبة:", min_value=1, step=1)
     
     with col2:
-        uploaded_file = st.file_uploader("ارفع التصميم أو الصورة المراد طباعتها هنا:", type=["png", "jpg", "jpeg"]) [cite: user_summary]
+        uploaded_file = st.file_uploader("ارفع التصميم أو الصورة المراد طباعتها هنا:", type=["png", "jpg", "jpeg"]) 
         if uploaded_file is not None:
             st.image(uploaded_file, caption="معاينة التصميم المرفوع", width=250)
 
@@ -99,7 +99,7 @@ if page == "متجر الزبائن (طلب أوردر)":
 
 # --- القسم الثاني: لوحة الإدارة ---
 else:
-    st.markdown("### 📊 لوحة تحكم وإدارة طلبات SAWA Shop") [cite: user_summary]
+    st.markdown("### 📊 لوحة تحكم وإدارة طلبات SAWA Shop")
     df_orders = load_orders_from_github()
     
     if not df_orders.empty:
