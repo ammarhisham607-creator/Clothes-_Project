@@ -22,7 +22,6 @@ except Exception as e:
 # دالة مخصصة لرفع الملفات والصور إلى مستودع GitHub
 def upload_to_github(file_bytes, file_path, commit_message):
     try:
-        # لو الملف موجود مسبقاً بنحدثه، لو جديد بننشأه
         try:
             contents = repo.get_contents(file_path)
             repo.update_file(contents.path, commit_message, file_bytes, contents.sha)
@@ -40,10 +39,9 @@ def load_orders_from_github():
         df = pd.read_csv(io.StringIO(contents.decoded_content.decode('utf-8')))
         return df
     except:
-        # لو الملف لسه ممش موجود، بنعمل جدول جديد بالتقسيم المظبوط
         return pd.DataFrame(columns=["الاسم", "الموبايل", "اللون", "المقاس", "الكمية", "رابط_التصميم", "التاريخ"])
 
-# --- تصميم واجهة موقع SAWA Shop --- [cite: user_summary]
+# --- واجهة موقع SAWA Shop --- [cite: user_summary]
 st.title("🛍️ متجر SAWA Shop الإلكتروني") [cite: user_summary]
 st.subheader("تصاميم ملابس مخصصة وعصرية") [cite: user_summary]
 st.divider()
@@ -71,17 +69,14 @@ if page == "متجر الزبائن (طلب أوردر)":
     st.markdown("---")
     if st.button("إرسال وتأكيد الأوردر للمصنع 🚀"):
         if name and phone and uploaded_file:
-            # توليد اسم فريد للصورة بناءً على وقت الطلب ورقم التليفون لعدم التداخل
             time_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             file_extension = uploaded_file.name.split(".")[-1]
             github_img_path = f"customer_designs/{time_str}_{phone}.{file_extension}"
             
             with st.spinner("جاري حفظ وتأمين تصميمك أونلاين..."):
-                # 1. رفع ملف الصورة إلى فولدر مستقل على GitHub
                 img_success = upload_to_github(uploaded_file.getvalue(), github_img_path, f"Upload design for {name}")
             
             if img_success:
-                # 2. تجهيز البيانات النصية وحفظها في الشيت
                 df_orders = load_orders_from_github()
                 img_url = f"https://raw.githubusercontent.com/{st.secrets['GITHUB_REPO']}/main/{github_img_path}"
                 
@@ -93,7 +88,6 @@ if page == "متجر الزبائن (طلب أوردر)":
                 
                 df_orders = pd.concat([df_orders, pd.DataFrame([new_row])], ignore_index=True)
                 
-                # تحويل الجدول المحدث إلى نص CSV ورفعه لـ GitHub
                 csv_buffer = io.StringIO()
                 df_orders.to_csv(csv_buffer, index=False)
                 upload_to_github(csv_buffer.getvalue().encode('utf-8'), "orders.csv", f"Add order for {name}")
@@ -109,13 +103,10 @@ else:
     df_orders = load_orders_from_github()
     
     if not df_orders.empty:
-        # عرض جدول البيانات بالكامل
         st.dataframe(df_orders, use_container_width=True)
-        
         st.divider()
         st.markdown("### 🖼️ استعراض وتحميل تصاميم الزبائن للأوردرات")
         
-        # عرض منفصل لكل أوردر بالصورة بتاعته عشان تسحبها للطباعة علطول
         for idx, row in df_orders.iterrows():
             with st.container():
                 col_txt, col_img = st.columns([2, 1])
