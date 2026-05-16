@@ -12,66 +12,111 @@ st.set_page_config(page_title="SAWA Shop - متجر ملابس وتصاميم م
 if "GOOGLE_VERIFICATION" in st.secrets:
     st.markdown(st.secrets["GOOGLE_VERIFICATION"], unsafe_allow_html=True)
 
-# 3. حقن كود الديكور الـ CSS السحري لتحويل مظهر الموقع تماماً
-custom_css = """
+# 3. كود الديكور الخارق - متوافق تماماً مع الموبايل والكمبيوتر (Responsive CSS)
+responsive_premium_css = """
 <style>
-    /* تغيير خلفية الموقع بالكامل لون داكن فاخر */
+    /* إعدادات الخلفية الفخمة المتدرجة لكل الشاشات */
     .stApp {
-        background-color: #0E1117;
-        color: #FFFFFF;
-        font-family: 'Cairo', sans-serif;
+        background: linear-gradient(135deg, #090d16 0%, #111026 50%, #220b2e 100%);
+        color: #f1f5f9 !important;
     }
-    
-    /* تصميم الهيدر والعناوين */
+
+    /* ضبط الخطوط والعناوين لتكون متناسقة على الموبايل والكمبيوتر */
     h1 {
-        color: #FFD700 !important; /* اللون الذهبي للبراند */
+        font-size: clamp(1.8rem, 4vw, 3rem) !important;
+        color: #ffffff !important;
         text-align: center;
-        font-weight: 800;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        background: linear-gradient(90deg, #a855f7, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 5px !important;
     }
     h3 {
-        color: #E0E0E0 !important;
+        font-size: clamp(1.2rem, 2.5vw, 1.8rem) !important;
+        color: #cbd5e1 !important;
         text-align: center;
+        margin-bottom: 25px !important;
     }
-    
-    /* تعديل شكل بطاقات إدخال البيانات */
-    .stTextInput>div>div>input, .stSelectbox>div>div>div, .stNumberInput>div>div>input, .stTextArea>div>div>textarea {
-        background-color: #1F2633 !important;
-        color: #FFFFFF !important;
-        border: 1px solid #3A4750 !important;
-        border-radius: 10px !important;
-        padding: 10px !important;
+
+    /* تحويل الخانات لبطاقات زجاجية مضيئة ومناسبة للمس بالصابع على الموبايل */
+    div.stTextInput > div > div > input, 
+    div.stSelectbox > div > div > div, 
+    div.stNumberInput > div > div > input,
+    div.stTextArea > div > div > textarea {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 16px !important;
+        padding: clamp(8px, 2vw, 14px) !important;
+        font-size: clamp(14px, 1.5vw, 16px) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
-    /* تدليع شكل زرار إرسال الأوردر وتأكيده */
-    .stButton>button {
-        background: linear-gradient(45deg, #FFD700, #FF8C00) !important;
-        color: #000000 !important;
+
+    /* تأثير النيون المتوهج عند التفاعل أو الكتابة */
+    div.stTextInput > div > div > input:focus, 
+    div.stSelectbox > div > div > div:focus,
+    div.stTextArea > div > div > textarea:focus {
+        border-color: #ec4899 !important;
+        box-shadow: 0 0 20px rgba(236, 72, 153, 0.4) !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* تصميم زرار "تأكيد الأوردر" الخارق */
+    div.stButton > button {
+        background: linear-gradient(90deg, #ca8a04 0%, #e11d48 50%, #9333ea 100%) !important;
+        background-size: 200% auto !important;
+        color: white !important;
         font-weight: bold !important;
-        font-size: 18px !important;
+        font-size: clamp(16px, 2vw, 20px) !important;
         border: none !important;
-        border-radius: 12px !important;
-        padding: 12px 30px !important;
-        width: 100% !important;
-        box-shadow: 0px 4px 15px rgba(255, 215, 0, 0.3) !important;
-        transition: all 0.3s ease-in-out !important;
+        border-radius: 50px !important;
+        padding: clamp(12px, 2.5vw, 18px) !important;
+        box-shadow: 0 10px 25px rgba(225, 29, 72, 0.3) !important;
+        transition: all 0.4s ease;
+        width: 100%;
+        text-transform: uppercase;
+        animation: pulseGlow 2s infinite;
+    }
+
+    /* تأثير تحريك الماوس وحركة النبض للزرار */
+    div.stButton > button:hover {
+        background-position: right center !important;
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(225, 29, 72, 0.6) !important;
     }
     
-    /* تأثير حركي عند مرور الماوس على الزرار */
-    .stButton>button:hover {
-        transform: translateY(-3px) !important;
-        box-shadow: 0px 6px 20px rgba(255, 215, 0, 0.6) !important;
-        background: linear-gradient(45deg, #FF8C00, #FFD700) !important;
+    @keyframes pulseGlow {
+        0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); }
+        70% { box-shadow: 0 0 0 15px rgba(225, 29, 72, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
     }
-    
-    /* تنسيق جدول البيانات للإدارة */
-    .stDataFrame {
-        background-color: #1F2633 !important;
-        border-radius: 10px;
+
+    /* تعديل مربع رفع الملفات ليكون شيك ومريح على الموبايل */
+    div.stFileUploader section {
+        background: rgba(168, 85, 247, 0.03) !important;
+        border: 2px dashed rgba(168, 85, 247, 0.3) !important;
+        border-radius: 20px !important;
+        padding: 20px !important;
+        transition: border-color 0.3s ease;
+    }
+    div.stFileUploader section:hover {
+        border-color: #ec4899 !important;
+    }
+
+    /* كود خاص لضبط الاستجابة على الشاشات الصغيرة (الموبايلات) */
+    @media (max-width: 768px) {
+        .stColumns [data-testid="column"] {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            margin-bottom: 20px;
+        }
+        div.stButton > button {
+            padding: 15px !important; /* تكبير الزرار على الموبايل لسهولة الضغط */
+        }
     }
 </style>
 """
-st.markdown(custom_css, unsafe_allow_html=True)
+st.markdown(responsive_premium_css, unsafe_allow_html=True)
 
 # 4. الاتصال بـ GitHub بأمان عبر الـ Secrets
 @st.cache_resource
@@ -101,7 +146,7 @@ def upload_to_github(file_bytes, file_path, commit_message):
         st.error(f"خطأ أثناء الحفظ على جيت هاب: {e}")
         return False
 
-# دالة لقراءة سجل الأوردرات الحالي من GitHub
+# دالة ذكية لقراءة سجل الأوردرات الحالي من GitHub
 @st.cache_data(ttl=60)
 def load_orders_from_github():
     if repo is None:
@@ -116,36 +161,36 @@ def load_orders_from_github():
 # تحميل البيانات الأساسية
 df_orders = load_orders_from_github()
 
-# نظام إدارة الصفحات المسجل في المتصفح
+# نظام الحماية وفصل الصفحات باستخدام Session State
 if "admin_logged_in" not in st.session_state:
     st.session_state["admin_logged_in"] = False
 
-# --- الواجهة الرئيسية للموقع (متجر الزبائن) ---
+# الواجهة الرئيسية للموقع (تفتح دائماً على متجر الزبائن)
 if not st.session_state["admin_logged_in"]:
-    st.title("👑 متجر SAWA Shop الإلكتروني")
-    st.subheader("صمم قطعتك الفريدة بأعلى جودة طباعة خامات عالمية")
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.title("🛍️ SAWA SHOP")
+    st.subheader("صمم قطعتك الفريدة.. ونحن نرفعها للواقع")
+    st.divider()
     
-    # حطيت البيانات جوه حاوية أنيقة
-    with st.container():
-        col1, col2 = st.columns(2)
-        with col1:
-            name = st.text_input("👤 اسمك الكريم بالكامل:", key="cust_name")
-            phone = st.text_input("📞 رقم الواتساب (لتأكيد الأوردر):", key="cust_phone")
-            item_type = st.selectbox("👕 اختر نوع المنتج:", ["تيشيرت صيفي قطن", "هودي شتوي", "سويت شيرت"], key="cust_item")
-            color = st.selectbox("🎨 اختر لون القماش:", ["أسود", "أبيض", "رمادي"], key="cust_color")
-            size = st.selectbox("📏 اختر المقاس المناسب:", ["M", "L", "XL", "XXL"], key="cust_size")
-            qty = st.number_input("🔢 الكمية المطلوبة:", min_value=1, step=1, key="cust_qty")
-            details = st.text_area("📝 تفاصيل أو ملاحظات خاصة بالتصميم:", placeholder="مثال: عايز الطباعة تكون كبيرة في الظهر..", key="cust_details")
+    col1, col2 = st.columns(2)
+    with col1:
+        name = st.text_input("اسمك بالكامل:")
+        phone = st.text_input("رقم الواتساب (لتأكيد الأوردر):")
         
-        with col2:
-            st.markdown("<p style='text-align: center; font-weight: bold;'>🖼️ ارفع تصميمك هنا</p>", unsafe_allow_html=True)
-            uploaded_file = st.file_uploader("", type=["png", "jpg", "jpeg"], key="cust_file")
-            if uploaded_file is not None:
-                st.image(uploaded_file, caption="معاينة التصميم المرفوع", use_container_width=True)
+        item_type = st.selectbox("نوع المنتج:", ["تيشيرت صيفي قطن", "هودي شتوي", "سويت شيرت"])
+        color = st.selectbox("لون القماش:", ["أسود", "أبيض", "رمادي"])
+        size = st.selectbox("المقاس:", ["M", "L", "XL", "XXL"])
+        qty = st.number_input("الكمية المطلوبة:", min_value=1, step=1)
+        
+        details = st.text_area("هل لديك أي ملاحظات خاصة بالتصميم؟", placeholder="مثال: محتاج الطباعة في منتصف الصدر بالظبط...")
+    
+    with col2:
+        st.markdown("<p style='font-weight: bold; font-size: 16px; margin-bottom:5px;'>📸 ارفع لوحة تصميمك هنا:</p>", unsafe_allow_html=True)
+        uploaded_file = st.file_uploader("", type=["png", "jpg", "jpeg"])
+        if uploaded_file is not None:
+            st.image(uploaded_file, caption="معاينة التصميم المرفوع", use_container_width=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("تأكيد وإرسال الأوردر للمصنع 🚀"):
+    if st.button("إرسال وتأكيد الأوردر الآن 🚀"):
         if name and phone and uploaded_file:
             time_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             file_extension = uploaded_file.name.split(".")[-1]
@@ -164,30 +209,32 @@ if not st.session_state["admin_logged_in"]:
                 }
                 
                 df_updated = pd.concat([df_orders, pd.DataFrame([new_row])], ignore_index=True)
+                
                 csv_buffer = io.StringIO()
                 df_updated.to_csv(csv_buffer, index=False)
                 upload_to_github(csv_buffer.getvalue().encode('utf-8'), "orders.csv", f"Add order for {name}")
                 
-                st.success("يا فنان، أوردرك وتصميمك وصلوا لعمار بنجاح! هنتواصل معاك فوراً. 🎉")
+                st.success("يا فنان، أوردرك وتصميمك وصلوا لعمار بنجاح! هنتواصل معاك على الواتساب فوراً. 🎉")
                 st.balloons()
         else:
             st.error("من فضلك، تأكد من كتابة الاسم ورقم الموبايل ورفع صورة التصميم أولاً!")
 
-    # بوابة الدخول السرية للإدارة
-    st.markdown("<br><br><br><br><br><br>", unsafe_allow_html=True)
-    with st.expander("🔐 تسجيل دخول الإدارة"):
-        password = st.text_input("أدخل كلمة السر الخاصة بعمار:", type="password", key="admin_password")
+    # بوابتك السرية للإدارة بأسفل الصفحة
+    st.markdown("<br><br><br><br><br>", unsafe_allow_html=True)
+    with st.expander("🔐 لوحة تحكم الإدارة"):
+        password = st.text_input("كلمة المرور السرية:", type="password")
         if st.button("دخول"):
             if password == "sawa2026":
                 st.session_state["admin_logged_in"] = True
                 st.rerun()
             else:
-                st.error("كلمة السر خاطئة يا صاحبي!")
+                st.error("كلمة السر خاطئة!")
 
-# --- لوحة التحكم (خاصة بعمار) ---
+# --- لوحة التحكم المتطابقة مع الديكور الجديد ---
 else:
-    st.title("📊 لوحة إدارة طلبات SAWA Shop")
-    if st.button("⬅️ خروج والعودة للمتجر"):
+    st.title("📊 لوحة تحكم وإدارة طلبات SAWA Shop")
+    
+    if st.button("⬅️ خروج والعودة لمتجر الزبائن"):
         st.session_state["admin_logged_in"] = False
         st.rerun()
         
