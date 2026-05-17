@@ -3,58 +3,123 @@ import pandas as pd
 from github import Github
 import io
 import datetime
-import re  # مكتبة الفلترة الأمنية للنصوص
-from PIL import Image # مكتبة التحقق من سلامة الصور
+import re
+from PIL import Image
 
-# 1. إعدادات الصفحة
-st.set_page_config(page_title="SAWA Shop - Secured", layout="wide")
+# ==================== [ 1. إعدادات الصفحة ] ====================
+st.set_page_config(page_title="SAWA Shop", layout="wide")
 
-# الديكور وحماية الواجهة
+# ==================== [ 2. الديكور النيون والبرق (CSS) ] ====================
 premium_ui_css = """
 <style>
-    .stApp {
-        background: linear-gradient(135deg, #070a13 0%, #0f0e26 50%, #1d072b 100%);
-        color: #f1f5f9 !important;
-    }
-    h1 {
-        color: #ffffff !important;
-        text-align: center;
-        background: linear-gradient(90deg, #ca8a04, #ec4899, #a855f7);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    h2, h3, h4 { text-align: center; color: #e2e8f0 !important; }
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
     
+    .stApp {
+        background: linear-gradient(135deg, #020205 0%, #080711 40%, #12021c 100%) !important;
+        font-family: 'Cairo', sans-serif !important;
+        color: #f8fafc !important;
+    }
+
+    h1 {
+        font-family: 'Cairo', sans-serif !important;
+        font-weight: 700 !important;
+        text-align: center;
+        color: #fff !important;
+        text-shadow: 0 0 7px #fff, 0 0 10px #fff, 0 0 21px #a855f7, 0 0 42px #a855f7, 0 0 82px #a855f7;
+        animation: blink 2s infinite alternate;
+        margin-bottom: 20px !important;
+    }
+
+    @keyframes blink {
+        0%, 18%, 22%, 25%, 53%, 57%, 100% {
+            text-shadow: 0 0 4px #fff, 0 0 11px #fff, 0 0 19px #ec4899, 0 0 40px #ec4899, 0 0 80px #ec4899;
+        }
+        20%, 24%, 55% { text-shadow: none; }
+    }
+
+    h2, h3, h4 { 
+        font-family: 'Cairo', sans-serif !important;
+        text-align: center; 
+        color: #e2e8f0 !important;
+        text-shadow: 0 0 5px rgba(168, 85, 247, 0.5);
+    }
+
+    div.stTextInput > div > div > input, 
+    div.stSelectbox > div > div > div, 
+    div.stNumberInput > div > div > input,
+    div.stTextArea > div > div > textarea {
+        background: rgba(255, 255, 255, 0.02) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(168, 85, 247, 0.2) !important;
+        border-radius: 12px !important;
+        padding: 12px !important;
+        font-family: 'Cairo', sans-serif !important;
+        transition: all 0.4s ease-in-out;
+    }
+
+    div.stTextInput > div > div > input:focus, 
+    div.stSelectbox > div > div > div:focus,
+    div.stTextArea > div > div > textarea:focus {
+        border-color: #ec4899 !important;
+        box-shadow: 0 0 15px rgba(236, 72, 153, 0.6) !important;
+        background: rgba(236, 72, 153, 0.05) !important;
+    }
+
+    div[data-testid="stForm"] {
+        background: rgba(15, 10, 25, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border-radius: 24px !important;
+        padding: 30px !important;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(168, 85, 247, 0.1) !important;
+        backdrop-filter: blur(10px);
+    }
+
+    div.stButton > button {
+        background: linear-gradient(90deg, #ec4899 0%, #8b5cf6 100%) !important;
+        color: white !important;
+        font-family: 'Cairo', sans-serif !important;
+        font-weight: bold !important;
+        border: none !important;
+        border-radius: 50px !important;
+        padding: 12px 30px !important;
+        box-shadow: 0 0 15px rgba(236, 72, 153, 0.4), 0 0 30px rgba(139, 92, 246, 0.2) !important;
+        transition: all 0.3s ease;
+        width: 100%;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    div.stButton > button:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 0 25px rgba(236, 72, 153, 0.8), 0 0 50px rgba(139, 92, 246, 0.6) !important;
+    }
+
     .whatsapp-btn button {
         background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%) !important;
-        color: white !important;
-        font-weight: bold !important;
-        border-radius: 50px !important;
-        padding: 14px !important;
-        box-shadow: 0 8px 20px rgba(56, 239, 125, 0.2) !important;
-        width: 100%;
+        box-shadow: 0 0 15px rgba(56, 239, 125, 0.4) !important;
     }
-    div[data-testid="stForm"] {
-        background: rgba(255, 255, 255, 0.03) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 20px !important;
-        padding: 25px !important;
+    .whatsapp-btn button:hover {
+        box-shadow: 0 0 30px rgba(56, 239, 125, 0.9) !important;
+    }
+
+    [data-testid="stMetricValue"] {
+        color: #38ef7d !important;
+        font-weight: bold !important;
+        text-shadow: 0 0 10px rgba(56, 239, 125, 0.5);
+    }
+    [data-testid="stMetricLabel"] {
+        color: #cbd5e1 !important;
+        font-size: 18px !important;
     }
 </style>
 """
 st.markdown(premium_ui_css, unsafe_allow_html=True)
 
-# دالة فلترة النصوص وتأمينها ضد حيل الـ CSV Injection
+# ==================== [ 3. دوال الحماية والاتصال بـ GitHub ] ====================
 def sanitize_text(text):
-    if not isinstance(text, str):
-        return str(text)
-    # إزالة أي علامات بدء المعادلات لمنع الاختراق عبر ملفات الإكسل
-    if text.startswith(('=', '+', '-', '@')):
-        text = "'" + text
-    # إزالة الرموز غير المرغوبة للحفاظ على نظافة السجل
+    if not isinstance(text, str): return str(text)
+    if text.startswith(('=', '+', '-', '@')): text = "'" + text
     return re.sub(r'[<>"{};]', '', text)
 
-# الاتصال بـ GitHub
 @st.cache_resource
 def get_github_repo():
     try:
@@ -100,7 +165,7 @@ df_orders = load_orders_from_github()
 if "user_role" not in st.session_state:
     st.session_state["user_role"] = None
 
-# ==================== [ شاشة تسجيل الدخول ] ====================
+# ==================== [ 4. شاشة تسجيل الدخول ] ====================
 if st.session_state["user_role"] is None:
     st.title("🛍️ نظام متجر SAWA SHOP")
     st.subheader("يرجى اختيار نوع الحساب للمتابعة")
@@ -117,22 +182,19 @@ if st.session_state["user_role"] is None:
         
     with col_login2:
         with st.form(key="admin_login_form"):
-            st.markdown("### 🔐 لوحة الإدارة (المؤمنة)")
-            st.write("خاص بمدير الموقع لمتابعة الطلبات.")
+            st.markdown("### 🔐 لوحة الإدارة")
             admin_name = st.text_input("اسم المستخدم:")
             admin_pass = st.text_input("كلمة المرور:", type="password")
             if st.form_submit_button("تسجيل الدخول كـ أدمن"):
-                # استدعاء البيانات بأمان من الـ Secrets السري
                 sec_user = st.secrets.get("ADMIN_USERNAME", "admin")
                 sec_pass = st.secrets.get("ADMIN_PASSWORD", "sawa2026")
-                
                 if admin_name == sec_user and admin_pass == sec_pass:
                     st.session_state["user_role"] = "admin"
                     st.rerun()
                 else:
                     st.error("البيانات غير صحيحة.")
 
-# ==================== [ صفحة المستخدم ] ====================
+# ==================== [ 5. صفحة المستخدم (الزبون) ] ====================
 elif st.session_state["user_role"] == "customer":
     st.title("🛍️ متجر SAWA SHOP الإلكتروني")
     
@@ -164,10 +226,9 @@ elif st.session_state["user_role"] == "customer":
     with btn_col1:
         if st.button("إرسال وتأكيد الأوردر للمصنع 🚀"):
             if name and phone and uploaded_file:
-                # 🛡️ الفحص الأمني الأول: التحقق أن الملف صورة حقيقية مش ملف خبيث متخفي
                 try:
                     img = Image.open(uploaded_file)
-                    img.verify() # التأكد من سلامة ملف الصورة داخلياً
+                    img.verify() 
                     is_valid_image = True
                 except:
                     is_valid_image = False
@@ -175,7 +236,6 @@ elif st.session_state["user_role"] == "customer":
                 if not is_valid_image:
                     st.error("عذراً، الملف المرفوع تالف أو ليس صورة صالحة للطباعة!")
                 else:
-                    # 🛡️ الفحص الأمني الثاني: تنظيف المدخلات النصية من أي حقن معادلات ضار
                     clean_name = sanitize_text(name)
                     clean_phone = sanitize_text(phone)
                     clean_details = sanitize_text(details)
@@ -189,7 +249,6 @@ elif st.session_state["user_role"] == "customer":
                     
                     if img_success:
                         img_url = f"https://raw.githubusercontent.com/{st.secrets['GITHUB_REPO']}/main/{github_img_path}"
-                        
                         new_row = {
                             "الاسم": clean_name, "الموبايل": clean_phone, "النوع": item_type, "اللون": color, 
                             "المقاس": size, "الكمية": qty, "ملاحظات": clean_details if clean_details else "لا يوجد", 
@@ -213,9 +272,9 @@ elif st.session_state["user_role"] == "customer":
             st.markdown(f'<meta http-equiv="refresh" content="0;URL=\'{whatsapp_url}\'" />', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== [ صفحة الإدارة / الداش بورد ] ====================
+# ==================== [ 6. صفحة الإدارة / الداش بورد المتطورة ] ====================
 elif st.session_state["user_role"] == "admin":
-    st.title("📊 داش بورد إدارة SAWA SHOP")
+    st.title("📊 داش بورد القيادة - SAWA SHOP")
     
     if st.sidebar.button("⬅️ تسجيل الخروج"):
         st.session_state["user_role"] = None
@@ -225,35 +284,60 @@ elif st.session_state["user_role"] == "admin":
     
     if not df_orders.empty:
         df_orders['الكمية'] = pd.to_numeric(df_orders['الكمية'], errors='coerce').fillna(1)
+        total_orders = len(df_orders)
+        total_pieces = int(df_orders['الكمية'].sum())
         
+        # --- المؤشرات الأساسية ---
         stat_col1, stat_col2 = st.columns(2)
         with stat_col1:
-            st.metric(label="📈 إجمالي الأوردرات المستلمة", value=f"{len(df_orders)} أوردر")
+            st.metric(label="📈 الأوردرات المستلمة", value=f"{total_orders} أوردر")
         with stat_col2:
-            st.metric(label="👕 إجمالي القطع المطلوبة", value=f"{int(df_orders['الكمية'].sum())} قطعة")
+            st.metric(label="👕 القطع المطلوب طباعتها", value=f"{total_pieces} قطعة")
             
         st.divider()
         
-        st.markdown("### 📊 تحليل المبيعات والألوان")
-        chart_col1, chart_col2 = st.columns(2)
+        # --- [الإضافة الجديدة 1] حاسبة الأرباح والتكاليف ---
+        st.markdown("### 💰 حاسبة التكاليف والأرباح")
+        cost_col, sell_col, profit_col = st.columns(3)
+        with cost_col:
+            cost = st.number_input("متوسط التكلفة للقطعة (جنية):", value=150, step=10)
+        with sell_col:
+            sell = st.number_input("متوسط سعر البيع (جنية):", value=300, step=10)
+        with profit_col:
+            total_profit = (sell - cost) * total_pieces
+            st.metric(label="💸 إجمالي الأرباح المتوقعة", value=f"{total_profit} ج.م")
+
+        # --- [الإضافة الجديدة 2] نظام تنبيه المخزون ---
+        st.markdown("### 📦 تنبيهات المخزون التلقائية")
+        top_item = df_orders.groupby('النوع')['الكمية'].sum().idxmax()
+        top_color = df_orders.groupby('اللون')['الكمية'].sum().idxmax()
+        st.warning(f"⚠️ **خلي بالك:** أكثر منتج مطلوب هو ({top_item} - لون {top_color}). تأكد من توفر خاماته في المصنع!")
+            
+        st.divider()
         
+        # --- التحليلات البيانية ---
+        st.markdown("### 📊 تحليل المبيعات")
+        chart_col1, chart_col2 = st.columns(2)
         with chart_col1:
             st.markdown("#### 🎨 الألوان الأكثر طلباً:")
-            color_counts = df_orders.groupby('اللون')['الكمية'].sum()
-            st.bar_chart(color_counts)
-            
+            st.bar_chart(df_orders.groupby('اللون')['الكمية'].sum())
         with chart_col2:
             st.markdown("#### 👕 المنتجات الأكثر مبيعاً:")
-            type_counts = df_orders.groupby('النوع')['الكمية'].sum()
-            st.bar_chart(type_counts)
+            st.bar_chart(df_orders.groupby('النوع')['الكمية'].sum())
             
         st.divider()
         
-        st.markdown("#### 📄 السجل التفصيلي للطلبات:")
+        # --- [الإضافة الجديدة 3] السجل وتنزيل البيانات ---
+        st.markdown("### 📄 السجل التفصيلي للطلبات")
         st.dataframe(df_orders, use_container_width=True)
+        
+        csv_download = df_orders.to_csv(index=False).encode('utf-8')
+        st.download_button(label="📥 تنزيل سجل الأوردرات (Excel/CSV)", data=csv_download, file_name='Sawa_Orders.csv', mime='text/csv')
+        
         st.divider()
         
-        st.markdown("### 🖼️ تصاميم العملاء الجاهزة للتنزيل والطباعة")
+        # --- تصاميم العملاء ---
+        st.markdown("### 🖼️ تصاميم العملاء الجاهزة للطباعة")
         for idx, row in df_orders.iterrows():
             with st.container():
                 col_txt, col_img = st.columns([2, 1])
@@ -262,9 +346,9 @@ elif st.session_state["user_role"] == "admin":
                     st.write(f"👕 **الطلب:** {row['النوع']} | {row['اللون']} | مقاس {row['المقاس']} | عدد {row['الكمية']} قطع")
                     st.write(f"📝 **ملاحظات:** {row['ملاحظات']}")
                     st.write(f"📅 **التاريخ:** {row['التاريخ']}")
-                    st.markdown(f"[📥 تحميل الصورة بجودة عالية للماكينة]({row['رابط_التصميم']})")
+                    st.markdown(f"[📥 تحميل الصورة بجودة عالية للمطبعة]({row['رابط_التصميم']})")
                 with col_img:
                     st.image(row['رابط_التصميم'], width=150)
-                st.divider()
+                st.markdown("<hr style='border:1px solid #a855f7; opacity:0.3;'>", unsafe_allow_html=True)
     else:
         st.info("لا توجد أوردرات مسجلة حتى الآن.")
