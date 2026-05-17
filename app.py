@@ -31,7 +31,7 @@ premium_ui_css = """
         -webkit-text-fill-color: transparent;
         margin-bottom: 10px !important;
     }
-    h2, h3 {
+    h2, h3, h4 {
         color: #e2e8f0 !important;
         text-align: center;
     }
@@ -58,17 +58,17 @@ premium_ui_css = """
     }
 
     /* تصميم الأزرار - زرار الإرسال */
-    .send-btn button {
+    .send-btn button, div.stButton > button {
         background: linear-gradient(90deg, #ec4899 0%, #8b5cf6 100%) !important;
         color: white !important;
         font-weight: bold !important;
         border-radius: 50px !important;
-        padding: 14px !important;
+        padding: 12px 30px !important;
         box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3) !important;
         transition: all 0.3s ease;
         width: 100%;
     }
-    .send-btn button:hover {
+    div.stButton > button:hover {
         transform: translateY(-2px);
         box-shadow: 0 12px 25px rgba(236, 72, 153, 0.5) !important;
     }
@@ -89,7 +89,14 @@ premium_ui_css = """
         box-shadow: 0 12px 25px rgba(56, 239, 125, 0.5) !important;
     }
 
-    /* تصميم كروت شاشة تسجيل الدخول */
+    /* تعديل شكل الفورم الزجاجي لمنع أخطاء الريفرش */
+    div[data-testid="stForm"] {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 20px !important;
+        padding: 25px !important;
+    }
+
     [data-testid="stMetricValue"] {
         color: #a855f7 !important;
         font-weight: bold !important;
@@ -125,22 +132,33 @@ def upload_to_github(file_bytes, file_path, commit_message):
         return False
 
 # دالة ذكية لقراءة سجل الأوردرات الحالي من GitHub
-@st.cache_data(ttl=30)
+@st.cache_data(ttl=5)
 def load_orders_from_github():
+    default_cols = ["الاسم", "الموبايل", "النوع", "اللون", "المقاس", "الكمية", "ملاحظات", "رابط_التصميم", "التاريخ"]
     if repo is None:
-        return pd.DataFrame(columns=["الاسم", "الموبايل", "النوع", "اللون", "المقاس", "الكمية", "ملاحظات", "رابط_التصميم", "التاريخ"])
+        return pd.DataFrame(columns=default_cols)
     try:
         contents = repo.get_contents("orders.csv")
         df = pd.read_csv(io.StringIO(contents.decoded_content.decode('utf-8')))
+        
+        # حماية إضافية: لو الملف القديم فيه أسامي أعمدة قديمة، بنوحدها هنا أوتوماتيك
+        if "نوع المنتج" in df.columns and "النوع" not in df.columns:
+            df = df.rename(columns={"نوع المنتج": "النوع"})
+            
+        # التأكد من وجود كل الأعمدة المطلوبة عشان ميتكررش أي KeyError
+        for col in default_cols:
+            if col not in df.columns:
+                df[col] = "غير محدد"
+                
         return df
     except:
-        return pd.DataFrame(columns=["الاسم", "الموبايل", "النوع", "اللون", "المقاس", "الكمية", "ملاحظات", "رابط_التصميم", "التاريخ"])
+        return pd.DataFrame(columns=default_cols)
 
 df_orders = load_orders_from_github()
 
 # --- نظام إدارة الجلسة والصفحات (Session State) ---
 if "user_role" not in st.session_state:
-    st.session_state["user_role"] = None  # الخيارات: None, 'customer', 'admin'
+    st.session_state["user_role"] = None
 
 # ==================== [ شاشة تسجيل الدخول الرئيسية ] ====================
 if st.session_state["user_role"] is None:
@@ -151,29 +169,30 @@ if st.session_state["user_role"] is None:
     col_login1, col_login2 = st.columns(2)
     
     with col_login1:
-        st.markdown("<div style='background: rgba(255,255,255,0.03); padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); text-align: center;'>", unsafe_allow_html=True)
-        st.markdown("### 👕 تصفح واطلب ملابسك")
-        st.write("ادخل لتصميم تيشيرتك أو الهودي الخاص بك وإرساله للمصنع فوراً.")
-        if st.button("الدخول كـ مستخدم (زبون)", key="btn_cust"):
-            st.session_state["user_role"] = "customer"
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+        with st.form(key="customer_login_form"):
+            st.markdown("### 👕 تصفح واطلب ملابسك")
+            st.write("ادخل لتصميم تيشيرتك أو الهودي الخاص بك وإرساله للمصنع فوراً.")
+            submit_cust = st.form_submit_button("الدخول كـ مستخدم (زبون)")
+            if submit_cust:
+                st.session_state["user_role"] = "customer"
+                st.rerun()
         
     with col_login2:
-        st.markdown("<div style='background: rgba(255,255,255,0.03); padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); text-align: center;'>", unsafe_allow_html=True)
-        st.markdown("### 🔐 لوحة تحكم الإدارة")
-        st.write("خاصة بمدير المصنع لمتابعة الأوردرات، الإحصائيات، وتحميل التصاميم.")
-        
-        admin_name = st.text_input("اسم المستخدم:")
-        admin_pass = st.text_input("كلمة المرور:", type="password")
-        
-        if st.button("الدخول كـ أدمن", key="btn_admin"):
-            if admin_name == "admin" and admin_pass == "sawa2026":
-                st.session_state["user_role"] = "admin"
-                st.rerun()
-            else:
-                st.error("بيانات الدخول غير صحيحة يا فنان!")
-        st.markdown("</div>", unsafe_allow_html=True)
+        with st.form(key="admin_login_form"):
+            st.markdown("### 🔐 لوحة تحكم الإدارة")
+            st.write("خاصة بمدير المصنع لمتابعة الأوردرات والداش بورد.")
+            
+            admin_name = st.text_input("اسم المستخدم:", key="adm_username")
+            admin_pass = st.text_input("كلمة المرور:", type="password", key="adm_password")
+            
+            submit_admin = st.form_submit_button("تسجيل الدخول كـ أدمن")
+            if submit_admin:
+                if admin_name == "admin" and admin_pass == "sawa2026":
+                    st.session_state["user_role"] = "admin"
+                    st.toast("🎉 مرحباً بك يا فنان، جاري فتح لوحة التحكم...")
+                    st.rerun()
+                else:
+                    st.error("بيانات الدخول غير صحيحة يا فنان!")
 
 # ==================== [ صفحة المستخدم / الزبون ] ====================
 elif st.session_state["user_role"] == "customer":
@@ -197,6 +216,14 @@ elif st.session_state["user_role"] == "customer":
         qty = st.number_input("الكمية المطلوبة:", min_value=1, step=1)
         
         details = st.text_area("هل لديك أي ملاحظات خاصة بالتصميم؟", placeholder="مثال: محتاج الطباعة في منتصف الصدر بالظبط...")
+        
+        promo_code = st.text_input("هل لديك كود خصم؟ 🎁", placeholder="اكتب كود الخصم هنا لو معاك")
+        if promo_code:
+            if promo_code.upper() == "SAWA10":
+                st.success("🔥 مبروك يا فنان! تم تفعيل كود الخصم (10% خصم على إجمالي الطلب)")
+                st.balloons()
+            else:
+                st.warning("كود الخصم هذا غير صحيح أو انتهت صلاحيته.")
     
     with col2:
         st.markdown("<p style='font-weight: bold; font-size: 16px; margin-bottom:5px;'>📸 ارفع لوحة تصميمك هنا:</p>", unsafe_allow_html=True)
@@ -206,10 +233,8 @@ elif st.session_state["user_role"] == "customer":
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # أزرار الإرسال والواتساب منسقة ومجسمة للموبايل والكمبيوتر
     btn_col1, btn_col2 = st.columns(2)
     with btn_col1:
-        st.markdown('<div class="send-btn">', unsafe_allow_html=True)
         if st.button("إرسال وتأكيد الأوردر للمصنع 🚀"):
             if name and phone and uploaded_file:
                 time_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -234,20 +259,18 @@ elif st.session_state["user_role"] == "customer":
                     upload_to_github(csv_buffer.getvalue().encode('utf-8'), "orders.csv", f"Add order for {name}")
                     
                     st.success("يا فنان، أوردرك وتصميمك وصلوا لعمار بنجاح! هنتواصل معاك على الواتساب فوراً. 🎉")
-                    st.balloons()
+                    st.toast("🚀 تم تسجيل الأوردر بنجاح في قاعدة البيانات!")
             else:
                 st.error("من فضلك، تأكد من كتابة الاسم ورقم الموبايل ورفع صورة التصميم أولاً!")
-        st.markdown('</div>', unsafe_allow_html=True)
 
     with btn_col2:
-        # [ميزة زرار الواتساب المطلوب برقمك]
         st.markdown('<div class="whatsapp-btn">', unsafe_allow_html=True)
-        whatsapp_url = f"https://wa.me/201149243249?text=مرحباً%20SAWA%20Shop،%20كنت%20محتاج%20أستفسر%20عن%20تفاصيل%20طباعة"
+        whatsapp_url = f"https://wa.me/201149243249?text=مرحباً%20SAWA%20Shop،%20كنت%20محتاج%20أستفسر%20عن%20تفاصيل%20أوردر%20طباعة"
         if st.button("💬 تواصل معنا عبر الواتساب"):
             st.markdown(f'<meta http-equiv="refresh" content="0;URL=\'{whatsapp_url}\'" />', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== [ صفحة الإدارة / الداش بورد الكاملة ] ====================
+# ==================== [ صفحة الإدارة / الداش بورد المحمية ] ====================
 elif st.session_state["user_role"] == "admin":
     st.title("📊 داش بورد نظام إدارة SAWA SHOP")
     st.subheader("مرحباً بك يا فنان في لوحة التحكم المركزية")
@@ -259,12 +282,11 @@ elif st.session_state["user_role"] == "admin":
     st.divider()
     
     if not df_orders.empty:
-        # تحويل الكميات لأرقام لضمان دقة العمليات الحسابية والرسومات
-        df_orders['الكمية'] = pd.to_numeric(df_orders['الكمية'])
+        # تحويل الكميات لأرقام بأمان لمعالجة أي نصوص
+        df_orders['الكمية'] = pd.to_numeric(df_orders['الكمية'], errors='coerce').fillna(1)
         
-        # 1. قسم الإحصائيات والأرقام الرئيسية الرقمية
         total_orders = len(df_orders)
-        total_pieces = df_orders['الكمية'].sum()
+        total_pieces = int(df_orders['الكمية'].sum())
         
         stat_col1, stat_col2 = st.columns(2)
         with stat_col1:
@@ -274,28 +296,31 @@ elif st.session_state["user_role"] == "admin":
             
         st.divider()
         
-        # 2. [الداش بورد الاحترافية والرسومات البيانية التفاعلية]
         st.markdown("### 📊 تحليل السوق ومبيعات المتجر")
         chart_col1, chart_col2 = st.columns(2)
         
         with chart_col1:
-            st.markdown("#### 🎨 الألوان الأكثر طلباً:")
-            color_counts = df_orders.groupby('اللون')['الكمية'].sum()
-            st.bar_chart(color_counts)
+            st.markdown("#### 🎨 الألوان الأكثر طلباً من الزبائن:")
+            if 'اللون' in df_orders.columns:
+                color_counts = df_orders.groupby('اللون')['الكمية'].sum()
+                st.bar_chart(color_counts)
+            else:
+                st.info("لا توجد بيانات ألوان كافية للرسم البياني.")
             
         with chart_col2:
-            st.markdown("#### 👕 المنتجات الأكثر مبيعاً:")
-            type_counts = df_orders.groupby('النوع')['الكمية'].sum()
-            st.bar_chart(type_counts)
+            st.markdown("#### 👕 المنتجات الأكثر مبيعاً في المصنع:")
+            if 'النوع' in df_orders.columns:
+                type_counts = df_orders.groupby('النوع')['الكمية'].sum()
+                st.bar_chart(type_counts)
+            else:
+                st.info("لا توجد بيانات منتجات كافية للرسم البياني.")
             
         st.divider()
         
-        # 3. جدول تفاصيل البيانات الكاملة
         st.markdown("#### 📄 جدول سجل الطلبات التفصيلي:")
         st.dataframe(df_orders, use_container_width=True)
         st.divider()
         
-        # 4. استعراض وتحميل تصاميم الزبائن للأوردرات
         st.markdown("### 🖼️ استعراض وتنزيل لوحات التصاميم للطباعة")
         for idx, row in df_orders.iterrows():
             with st.container():
@@ -303,13 +328,15 @@ elif st.session_state["user_role"] == "admin":
                 with col_txt:
                     st.write(f"👤 **العميل:** {row['الاسم']}")
                     st.write(f"📞 **واتساب العميل:** {row['الموبايل']}")
-                    st.write(f"🏷️ **نوع القطعة:** {row.get('النوع', 'تيشيرت')}")
-                    st.write(f"🎨 **المواصفات:** لون {row['اللون']} | مقاس {row['المقاس']} | عدد {row['الكمية']} قطع")
+                    st.write(f"🏷️ **نوع القطعة:** {row.get('النوع', 'غير محدد')}")
+                    st.write(f"🎨 **المواصفات:** لون {row.get('اللون', 'غير محدد')} | مقاس {row.get('المقاس', 'غير محدد')} | عدد {row['الكمية']} قطع")
                     st.write(f"📝 **ملاحظات العميل للطباعة:** {row.get('ملاحظات', 'لا يوجد')}")
-                    st.write(f"📅 **التاريخ والوقت:** {row['التاريخ']}")
-                    st.markdown(f"[📥 تحميل الصورة بجودة عالية للماكينة]({row['رابط_التصميم']})")
+                    st.write(f"📅 **التاريخ والوقت:** {row.get('التاريخ', 'غير مسجل')}")
+                    if 'رابط_التصميم' in row and str(row['رابط_التصميم']).startswith('http'):
+                        st.markdown(f"[📥 تحميل الصورة بجودة عالية للماكينة]({row['رابط_التصميم']})")
                 with col_img:
-                    st.image(row['رابط_التصميم'], width=180)
+                    if 'رابط_التصميم' in row and str(row['رابط_التصميم']).startswith('http'):
+                        st.image(row['رابط_التصميم'], width=180)
                 st.divider()
     else:
         st.info("لا توجد أوردرات مسجلة في قاعدة البيانات حتى الآن.")
