@@ -3,11 +3,13 @@ import pandas as pd
 from github import Github
 import io
 import datetime
+import re  # مكتبة الفلترة الأمنية للنصوص
+from PIL import Image # مكتبة التحقق من سلامة الصور
 
 # 1. إعدادات الصفحة
-st.set_page_config(page_title="SAWA Shop", layout="wide")
+st.set_page_config(page_title="SAWA Shop - Secured", layout="wide")
 
-# 2. كود الديكور المطور (CSS) لضبط الألوان والخلفية والزرار الأخضر للواتساب
+# الديكور وحماية الواجهة
 premium_ui_css = """
 <style>
     .stApp {
@@ -23,7 +25,6 @@ premium_ui_css = """
     }
     h2, h3, h4 { text-align: center; color: #e2e8f0 !important; }
     
-    /* تصميم زرار الواتساب الأخضر الاحترافي */
     .whatsapp-btn button {
         background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%) !important;
         color: white !important;
@@ -31,12 +32,7 @@ premium_ui_css = """
         border-radius: 50px !important;
         padding: 14px !important;
         box-shadow: 0 8px 20px rgba(56, 239, 125, 0.2) !important;
-        transition: all 0.3s ease;
         width: 100%;
-    }
-    .whatsapp-btn button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 25px rgba(56, 239, 125, 0.5) !important;
     }
     div[data-testid="stForm"] {
         background: rgba(255, 255, 255, 0.03) !important;
@@ -48,7 +44,17 @@ premium_ui_css = """
 """
 st.markdown(premium_ui_css, unsafe_allow_html=True)
 
-# 3. الاتصال بـ GitHub
+# دالة فلترة النصوص وتأمينها ضد حيل الـ CSV Injection
+def sanitize_text(text):
+    if not isinstance(text, str):
+        return str(text)
+    # إزالة أي علامات بدء المعادلات لمنع الاختراق عبر ملفات الإكسل
+    if text.startswith(('=', '+', '-', '@')):
+        text = "'" + text
+    # إزالة الرموز غير المرغوبة للحفاظ على نظافة السجل
+    return re.sub(r'[<>"{};]', '', text)
+
+# الاتصال بـ GitHub
 @st.cache_resource
 def get_github_repo():
     try:
@@ -72,7 +78,6 @@ def upload_to_github(file_bytes, file_path, commit_message):
     except:
         return False
 
-# 4. قراءة البيانات وحمايتها من أخطاء أسماء الأعمدة (KeyError)
 @st.cache_data(ttl=5)
 def load_orders_from_github():
     default_cols = ["الاسم", "الموبايل", "النوع", "اللون", "المقاس", "الكمية", "ملاحظات", "رابط_التصميم", "التاريخ"]
@@ -81,11 +86,8 @@ def load_orders_from_github():
     try:
         contents = repo.get_contents("orders.csv")
         df = pd.read_csv(io.StringIO(contents.decoded_content.decode('utf-8')))
-        
-        # تحويل وتأمين المسميات القديمة أوتوماتيكياً لمنع الكراش
         if "نوع المنتج" in df.columns:
             df = df.rename(columns={"نوع المنتج": "النوع"})
-            
         for col in default_cols:
             if col not in df.columns:
                 df[col] = "غير محدد"
@@ -95,7 +97,6 @@ def load_orders_from_github():
 
 df_orders = load_orders_from_github()
 
-# 5. إدارة الجلسة والتبديل بين الصفحات
 if "user_role" not in st.session_state:
     st.session_state["user_role"] = None
 
@@ -116,12 +117,16 @@ if st.session_state["user_role"] is None:
         
     with col_login2:
         with st.form(key="admin_login_form"):
-            st.markdown("### 🔐 لوحة الإدارة")
+            st.markdown("### 🔐 لوحة الإدارة (المؤمنة)")
             st.write("خاص بمدير الموقع لمتابعة الطلبات.")
             admin_name = st.text_input("اسم المستخدم:")
             admin_pass = st.text_input("كلمة المرور:", type="password")
             if st.form_submit_button("تسجيل الدخول كـ أدمن"):
-                if admin_name == "admin" and admin_pass == "sawa2026":
+                # استدعاء البيانات بأمان من الـ Secrets السري
+                sec_user = st.secrets.get("ADMIN_USERNAME", "admin")
+                sec_pass = st.secrets.get("ADMIN_PASSWORD", "sawa2026")
+                
+                if admin_name == sec_user and admin_pass == sec_pass:
                     st.session_state["user_role"] = "admin"
                     st.rerun()
                 else:
@@ -159,29 +164,45 @@ elif st.session_state["user_role"] == "customer":
     with btn_col1:
         if st.button("إرسال وتأكيد الأوردر للمصنع 🚀"):
             if name and phone and uploaded_file:
-                time_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                file_extension = uploaded_file.name.split(".")[-1]
-                github_img_path = f"customer_designs/{time_str}_{phone}.{file_extension}"
+                # 🛡️ الفحص الأمني الأول: التحقق أن الملف صورة حقيقية مش ملف خبيث متخفي
+                try:
+                    img = Image.open(uploaded_file)
+                    img.verify() # التأكد من سلامة ملف الصورة داخلياً
+                    is_valid_image = True
+                except:
+                    is_valid_image = False
                 
-                with st.spinner("جاري الإرسال..."):
-                    img_success = upload_to_github(uploaded_file.getvalue(), github_img_path, f"Upload design for {name}")
-                
-                if img_success:
-                    img_url = f"https://raw.githubusercontent.com/{st.secrets['GITHUB_REPO']}/main/{github_img_path}"
+                if not is_valid_image:
+                    st.error("عذراً، الملف المرفوع تالف أو ليس صورة صالحة للطباعة!")
+                else:
+                    # 🛡️ الفحص الأمني الثاني: تنظيف المدخلات النصية من أي حقن معادلات ضار
+                    clean_name = sanitize_text(name)
+                    clean_phone = sanitize_text(phone)
+                    clean_details = sanitize_text(details)
                     
-                    new_row = {
-                        "الاسم": name, "الموبايل": phone, "النوع": item_type, "اللون": color, 
-                        "المقاس": size, "الكمية": qty, "ملاحظات": details if details else "لا يوجد", 
-                        "رابط_التصميم": img_url, "التاريخ": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-                    }
+                    time_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                    file_extension = uploaded_file.name.split(".")[-1]
+                    github_img_path = f"customer_designs/{time_str}_{clean_phone}.{file_extension}"
                     
-                    df_updated = pd.concat([df_orders, pd.DataFrame([new_row])], ignore_index=True)
-                    csv_buffer = io.StringIO()
-                    df_updated.to_csv(csv_buffer, index=False)
-                    upload_to_github(csv_buffer.getvalue().encode('utf-8'), "orders.csv", f"Add order for {name}")
+                    with st.spinner("جاري الإرسال بأمان..."):
+                        img_success = upload_to_github(uploaded_file.getvalue(), github_img_path, f"Upload design for {clean_name}")
                     
-                    st.success("تم إرسال أوردرك وتصميمك بنجاح! 🎉")
-                    st.balloons()
+                    if img_success:
+                        img_url = f"https://raw.githubusercontent.com/{st.secrets['GITHUB_REPO']}/main/{github_img_path}"
+                        
+                        new_row = {
+                            "الاسم": clean_name, "الموبايل": clean_phone, "النوع": item_type, "اللون": color, 
+                            "المقاس": size, "الكمية": qty, "ملاحظات": clean_details if clean_details else "لا يوجد", 
+                            "رابط_التصميم": img_url, "التاريخ": datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+                        }
+                        
+                        df_updated = pd.concat([df_orders, pd.DataFrame([new_row])], ignore_index=True)
+                        csv_buffer = io.StringIO()
+                        df_updated.to_csv(csv_buffer, index=False)
+                        upload_to_github(csv_buffer.getvalue().encode('utf-8'), "orders.csv", f"Add order for {clean_name}")
+                        
+                        st.success("تم إرسال أوردرك وتصميمك بنجاح وبأمان كامل! 🎉")
+                        st.balloons()
             else:
                 st.error("برجاء ملء البيانات ورفع التصميم أولاً!")
 
