@@ -10,67 +10,88 @@ from PIL import Image
 # ==================== [ 1. إعدادات الصفحة ] ====================
 st.set_page_config(page_title="SAWA Shop", layout="wide")
 
-# ==================== [ 2. الديكور النيون والبرق ] ====================
+# ==================== [ 2. الديكور النيون المتغير والخرابيش (Cyberpunk) ] ====================
 premium_ui_css = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
     
+    /* خلفية بخطوط وخرابيش شبكية (Cyberpunk Scratches) */
     .stApp {
-        background: linear-gradient(135deg, #020205 0%, #080711 40%, #12021c 100%) !important;
+        background: 
+            linear-gradient(135deg, rgba(2,2,5,0.95) 0%, rgba(18,2,28,0.95) 100%),
+            repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 11px),
+            repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 11px) !important;
+        background-attachment: fixed !important;
         font-family: 'Cairo', sans-serif !important;
         color: #f8fafc !important;
     }
 
+    /* نيون بألوان متغيرة (أحمر، أخضر، أصفر، أزرق، وردي) وبيطفي وينور */
     h1 {
         font-family: 'Cairo', sans-serif !important;
-        font-weight: 700 !important;
+        font-weight: 900 !important;
         text-align: center;
-        color: #fff !important;
-        text-shadow: 0 0 7px #fff, 0 0 10px #fff, 0 0 21px #a855f7, 0 0 42px #a855f7;
-        animation: blink 2s infinite alternate;
-        margin-bottom: 20px !important;
+        color: #ffffff !important;
+        margin-bottom: 25px !important;
+        text-transform: uppercase;
+        animation: rgb-neon-glitch 4s infinite alternate;
     }
 
-    @keyframes blink {
-        0%, 18%, 22%, 25%, 53%, 57%, 100% {
-            text-shadow: 0 0 4px #fff, 0 0 11px #fff, 0 0 19px #ec4899, 0 0 40px #ec4899;
-        }
-        20%, 24%, 55% { text-shadow: none; }
+    @keyframes rgb-neon-glitch {
+        0%   { text-shadow: 0 0 5px #fff, 0 0 10px #ff003c, 0 0 20px #ff003c, 0 0 40px #ff003c; }
+        20%  { text-shadow: 0 0 5px #fff, 0 0 10px #ff003c, 0 0 20px #ff003c, 0 0 40px #ff003c; }
+        21%  { text-shadow: none; } /* خربشة أو طفية سريعة */
+        22%  { text-shadow: 0 0 5px #fff, 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 40px #00ff00; }
+        40%  { text-shadow: 0 0 5px #fff, 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 40px #00ff00; }
+        50%  { text-shadow: 0 0 5px #fff, 0 0 10px #fcee0a, 0 0 20px #fcee0a, 0 0 40px #fcee0a; }
+        70%  { text-shadow: 0 0 5px #fff, 0 0 10px #00e5ff, 0 0 20px #00e5ff, 0 0 40px #00e5ff; }
+        71%  { text-shadow: none; } /* طفية سريعة تانية */
+        72%  { text-shadow: 0 0 5px #fff, 0 0 10px #a855f7, 0 0 20px #a855f7, 0 0 40px #a855f7; }
+        100% { text-shadow: 0 0 5px #fff, 0 0 10px #a855f7, 0 0 20px #a855f7, 0 0 40px #a855f7; }
     }
 
     h2, h3, h4 { 
         font-family: 'Cairo', sans-serif !important;
         text-align: center; 
         color: #e2e8f0 !important;
-        text-shadow: 0 0 5px rgba(168, 85, 247, 0.5);
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
     }
 
+    /* الخانات شكلها زجاجي ومتين */
     div.stTextInput > div > div > input, 
     div.stSelectbox > div > div > div, 
     div.stNumberInput > div > div > input,
     div.stTextArea > div > div > textarea {
-        background: rgba(255, 255, 255, 0.02) !important;
+        background: rgba(255, 255, 255, 0.03) !important;
         color: #ffffff !important;
-        border: 1px solid rgba(168, 85, 247, 0.2) !important;
-        border-radius: 12px !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 8px !important;
         padding: 12px !important;
         font-family: 'Cairo', sans-serif !important;
     }
 
+    div.stTextInput > div > div > input:focus, 
+    div.stSelectbox > div > div > div:focus,
+    div.stTextArea > div > div > textarea:focus {
+        border-color: #00e5ff !important;
+        box-shadow: 0 0 15px rgba(0, 229, 255, 0.4) !important;
+    }
+
+    /* أزرار الإرسال */
     div.stButton > button {
         background: linear-gradient(90deg, #ec4899 0%, #8b5cf6 100%) !important;
         color: white !important;
         font-family: 'Cairo', sans-serif !important;
         font-weight: bold !important;
         border: none !important;
-        border-radius: 50px !important;
+        border-radius: 5px !important; /* شكل حاد يدي طابع جيمنج */
         padding: 12px 30px !important;
         box-shadow: 0 0 15px rgba(236, 72, 153, 0.4) !important;
         width: 100%;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
     }
     div.stButton > button:hover {
-        transform: translateY(-3px) scale(1.02);
+        transform: scale(1.02);
         box-shadow: 0 0 25px rgba(236, 72, 153, 0.8) !important;
     }
 </style>
@@ -120,7 +141,7 @@ def load_orders_from_github():
     except:
         return pd.DataFrame(columns=default_cols)
 
-# تحميل الإعدادات (الأقسام والألوان)
+# دالة قراءة الإعدادات
 @st.cache_data(ttl=5)
 def load_settings_from_github():
     default_settings = {
@@ -148,17 +169,19 @@ def save_settings_to_github(settings_dict):
     except:
         return False
 
-df_orders = load_orders_from_github()
-settings = load_settings_from_github()
-
+# ==================== [ 4. تهيئة الذاكرة اللحظية (عشان التحديثات تظهر فوراً) ] ====================
 if "user_role" not in st.session_state:
     st.session_state["user_role"] = "customer"
 
-# ==================== [ 4. الشفرة السرية (لوحة تسجيل الدخول المخفية) ] ====================
+if "settings" not in st.session_state:
+    st.session_state["settings"] = load_settings_from_github()
+
+df_orders = load_orders_from_github()
+
+# ==================== [ 5. الشفرة السرية (الباب الخلفي للإدارة) ] ====================
 with st.sidebar:
     if st.session_state["user_role"] == "customer":
-        st.markdown("<br><br><br><br><br><br>", unsafe_allow_html=True)
-        # أيقونة الترس المخفية اللي محدش هيتوقع إنها لوحة الدخول
+        st.markdown("<br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)
         with st.expander("⚙️"):
             admin_name = st.text_input("U", label_visibility="collapsed", placeholder="User")
             admin_pass = st.text_input("P", type="password", label_visibility="collapsed", placeholder="Pass")
@@ -175,9 +198,9 @@ with st.sidebar:
             st.session_state["user_role"] = "customer"
             st.rerun()
 
-# ==================== [ 5. صفحة المستخدم (الزبون) - الواجهة الافتراضية دائماً ] ====================
+# ==================== [ 6. صفحة المتجر (الواجهة الرئيسية) ] ====================
 if st.session_state["user_role"] == "customer":
-    st.title("🛍️ متجر SAWA SHOP الإلكتروني")
+    st.title("🛍️ متجر SAWA SHOP")
     st.subheader("صمم قطعتك الفريدة ودع الباقي للمصنع")
     st.divider()
     
@@ -185,12 +208,12 @@ if st.session_state["user_role"] == "customer":
     with col1:
         name = st.text_input("اسمك بالكامل:")
         phone = st.text_input("رقم الواتساب:")
-        # الأقسام والألوان بتقرأ أوتوماتيك من الإعدادات اللي الأدمن ضافها
-        item_type = st.selectbox("نوع المنتج:", settings["types"])
-        color = st.selectbox("لون القماش:", settings["colors"])
-        size = st.selectbox("المقاس:", ["S", "M", "L", "XL", "XXL", "3XL"])
+        # بتقرأ هنا من الـ Session State عشان تظهر أي لون أو قسم جديد في ثانية!
+        item_type = st.selectbox("نوع المنتج:", st.session_state["settings"]["types"])
+        color = st.selectbox("لون القماش:", st.session_state["settings"]["colors"])
+        size = st.selectbox("المقاس:", ["S", "M", "L", "XL", "XXL", "3XL", "4XL"])
         qty = st.number_input("الكمية المطلوبة:", min_value=1, step=1)
-        details = st.text_area("ملاحظات خاصة بالطباعة:")
+        details = st.text_area("ملاحظات خاصة بالطباعة (اختياري):")
     
     with col2:
         st.markdown("**📸 ارفع لوحة تصميمك هنا:**")
@@ -202,7 +225,7 @@ if st.session_state["user_role"] == "customer":
     
     btn_col1, btn_col2 = st.columns(2)
     with btn_col1:
-        if st.button("إرسال وتأكيد الأوردر للمصنع 🚀"):
+        if st.button("إرسال وتأكيد الأوردر 🚀"):
             if name and phone and uploaded_file:
                 try:
                     img = Image.open(uploaded_file)
@@ -222,8 +245,8 @@ if st.session_state["user_role"] == "customer":
                     file_extension = uploaded_file.name.split(".")[-1]
                     github_img_path = f"customer_designs/{time_str}_{clean_phone}.{file_extension}"
                     
-                    with st.spinner("جاري الإرسال..."):
-                        img_success = upload_to_github(uploaded_file.getvalue(), github_img_path, f"Upload design for {clean_name}")
+                    with st.spinner("جاري تأمين ورفع الأوردر..."):
+                        img_success = upload_to_github(uploaded_file.getvalue(), github_img_path, f"Order: {clean_name}")
                     
                     if img_success:
                         img_url = f"https://raw.githubusercontent.com/{st.secrets['GITHUB_REPO']}/main/{github_img_path}"
@@ -241,25 +264,23 @@ if st.session_state["user_role"] == "customer":
                         st.success("تم إرسال أوردرك وتصميمك بنجاح! 🎉")
                         st.balloons()
             else:
-                st.error("برجاء ملء البيانات ورفع التصميم أولاً!")
+                st.error("برجاء إدخال الاسم، رقم الواتساب، ورفع التصميم أولاً!")
 
     with btn_col2:
-        # زرار الواتساب (HTML مضمون 100% يفتح الأبلكيشن)
         whatsapp_html = """
         <a href="https://wa.me/201149243249?text=مرحباً%20SAWA%20Shop،%20أريد%20الاستفسار" target="_blank" style="text-decoration: none;">
-            <div style="background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%); color: white; text-align: center; font-weight: bold; font-family: 'Cairo', sans-serif; border-radius: 50px; padding: 12px; margin-top: 2px; box-shadow: 0 0 15px rgba(56, 239, 125, 0.4); cursor: pointer; transition: 0.3s; width: 100%;">
+            <div style="background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%); color: white; text-align: center; font-weight: bold; font-family: 'Cairo', sans-serif; border-radius: 5px; padding: 12px; margin-top: 2px; box-shadow: 0 0 15px rgba(56, 239, 125, 0.4); cursor: pointer; transition: 0.3s; width: 100%;">
                 💬 تواصل معنا عبر الواتساب
             </div>
         </a>
         """
         st.markdown(whatsapp_html, unsafe_allow_html=True)
 
-# ==================== [ 6. صفحة الإدارة المركزية (لا تظهر إلا بالشفرة) ] ====================
+# ==================== [ 7. غرفة التحكم والإدارة (الكنترول) ] ====================
 elif st.session_state["user_role"] == "admin":
     st.title("📊 غرفة تحكم SAWA SHOP")
     
-    # تقسيم لوحة الإدارة لتبويبات منظمة
-    tab1, tab2 = st.tabs(["📋 متابعة الأوردرات", "⚙️ إعدادات المتجر (إضافة أقسام وصور)"])
+    tab1, tab2 = st.tabs(["📋 متابعة الأوردرات والداش بورد", "⚙️ التحكم وإضافة الأقسام/الألوان"])
     
     with tab1:
         if not df_orders.empty:
@@ -267,12 +288,13 @@ elif st.session_state["user_role"] == "admin":
             total_orders = len(df_orders)
             total_pieces = int(df_orders['الكمية'].sum())
             
+            st.markdown("### 📈 إحصائيات سريعة")
             stat_col1, stat_col2 = st.columns(2)
-            stat_col1.metric("📈 الأوردرات المستلمة", f"{total_orders} أوردر")
+            stat_col1.metric("📦 الأوردرات المستلمة", f"{total_orders} أوردر")
             stat_col2.metric("👕 القطع المطلوب طباعتها", f"{total_pieces} قطعة")
                 
             st.divider()
-            st.markdown("#### 📄 السجل التفصيلي للطلبات")
+            st.markdown("#### 📄 جدول الطلبات التفصيلي")
             st.dataframe(df_orders, use_container_width=True)
             
             st.divider()
@@ -281,52 +303,55 @@ elif st.session_state["user_role"] == "admin":
                 with st.container():
                     col_txt, col_img = st.columns([2, 1])
                     with col_txt:
-                        st.write(f"👤 **العميل:** {row['الاسم']} | 📞 **الموبايل:** {row['الموبايل']}")
-                        st.write(f"👕 **الطلب:** {row['النوع']} | {row['اللون']} | مقاس {row['المقاس']} | عدد {row['الكمية']} قطع")
-                        st.write(f"📝 **ملاحظات:** {row['ملاحظات']}")
-                        st.write(f"📅 **التاريخ:** {row['التاريخ']}")
-                        st.markdown(f"[📥 تحميل الصورة الأصلية بجودة عالية]({row['رابط_التصميم']})")
+                        st.write(f"👤 **العميل:** {row['الاسم']} | 📞 **واتساب:** {row['الموبايل']}")
+                        st.write(f"👕 **الطلب:** {row['النوع']} | لون {row['اللون']} | مقاس {row['المقاس']} | عدد {row['الكمية']}")
+                        st.write(f"📝 **الملاحظات:** {row['ملاحظات']}")
+                        st.write(f"📅 **الوقت:** {row['التاريخ']}")
+                        st.markdown(f"[📥 تحميل الصورة الأصلية]({row['رابط_التصميم']})")
                     with col_img:
                         st.image(row['رابط_التصميم'], width=150)
-                    st.markdown("<hr style='border:1px solid #a855f7; opacity:0.3;'>", unsafe_allow_html=True)
+                    st.markdown("<hr style='border:1px solid #00e5ff; opacity:0.3;'>", unsafe_allow_html=True)
         else:
             st.info("لا توجد أوردرات مسجلة حتى الآن.")
 
     with tab2:
-        st.markdown("### ➕ إضافة وتعديل خيارات المتجر")
+        st.markdown("### ➕ تحديث المتجر (يظهر للزبون فوراً)")
         col_type, col_color = st.columns(2)
         
         with col_type:
-            st.markdown("#### إضافة قسم منتجات جديد")
-            new_type = st.text_input("اسم القسم (مثال: كاب، مج، بولو):")
-            if st.button("إضافة القسم"):
-                if new_type and new_type not in settings["types"]:
-                    settings["types"].append(new_type)
-                    save_settings_to_github(settings)
-                    st.success(f"تم إضافة قسم {new_type} للمتجر بنجاح!")
+            st.markdown("#### إضافة قسم جديد")
+            new_type = st.text_input("اسم المنتج الجديد (مثال: مج، كاب):")
+            if st.button("إضافة القسم للمتجر"):
+                if new_type and new_type not in st.session_state["settings"]["types"]:
+                    # تحديث الذاكرة اللحظية
+                    st.session_state["settings"]["types"].append(new_type)
+                    # حفظ في جيت هاب في الخلفية
+                    save_settings_to_github(st.session_state["settings"])
+                    st.success(f"تم إضافة '{new_type}' بنجاح!")
                     st.rerun()
                     
         with col_color:
-            st.markdown("#### إضافة لون قماش جديد")
-            new_color = st.text_input("اسم اللون (مثال: كحلي، أحمر):")
-            if st.button("إضافة اللون"):
-                if new_color and new_color not in settings["colors"]:
-                    settings["colors"].append(new_color)
-                    save_settings_to_github(settings)
-                    st.success(f"تم إضافة اللون {new_color} بنجاح!")
+            st.markdown("#### إضافة لون جديد")
+            new_color = st.text_input("اسم اللون الجديد (مثال: كحلي، أحمر):")
+            if st.button("إضافة اللون للمتجر"):
+                if new_color and new_color not in st.session_state["settings"]["colors"]:
+                    # تحديث الذاكرة اللحظية
+                    st.session_state["settings"]["colors"].append(new_color)
+                    # حفظ في جيت هاب في الخلفية
+                    save_settings_to_github(st.session_state["settings"])
+                    st.success(f"تم إضافة لون '{new_color}' بنجاح!")
                     st.rerun()
                     
         st.divider()
-        st.markdown("### 🖼️ رفع صور وإعلانات عامة")
-        st.write("تقدر ترفع أي صورة خاصة بالمصنع هنا، وهتاخد رابط مباشر تستخدمه في أي مكان.")
-        admin_upload = st.file_uploader("اختر الصورة لرفعها:", type=["png", "jpg", "jpeg"], key="admin_up")
-        
-        if st.button("رفع الصورة 🚀", key="admin_upload_btn"):
+        st.markdown("### 🖼️ خزانة الصور السريعة (لرفع أي صورة)")
+        st.write("ارفع أي صورة هنا عشان تاخد الرابط بتاعها تستخدمه كإعلان أو تبعته للزبون.")
+        admin_upload = st.file_uploader("اختر صورة للرفع:", type=["png", "jpg", "jpeg"])
+        if st.button("رفع الصورة للخزنة 🚀"):
             if admin_upload:
                 time_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 admin_img_path = f"store_assets/img_{time_str}.{admin_upload.name.split('.')[-1]}"
-                with st.spinner("جاري رفع الصورة للخزنة..."):
+                with st.spinner("جاري الرفع..."):
                     upload_to_github(admin_upload.getvalue(), admin_img_path, "Admin uploaded image")
                     img_url = f"https://raw.githubusercontent.com/{st.secrets['GITHUB_REPO']}/main/{admin_img_path}"
-                    st.success("تم رفع الصورة بنجاح! انسخ الرابط بتاعها من هنا:")
+                    st.success("تم الرفع بنجاح! الرابط جاهز للنسخ:")
                     st.code(img_url)
