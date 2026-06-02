@@ -1,60 +1,101 @@
 import streamlit as st
 import base64
+import requests
+import json
 
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="World of Books", page_icon="📚", layout="wide")
 
-# 2. كود الديكور والنيون المتحرك (CSS)
+# 2. كود الديكور وتعديل المقاسات والنيون المتحرك (CSS)
 neon_style = """
 <style>
-/* خلفية الموقع */
+/* خلفية الموقع العامة */
 .stApp {
-    background: linear-gradient(rgba(15, 15, 26, 0.9), rgba(15, 15, 26, 0.95)), 
+    background: linear-gradient(rgba(15, 15, 26, 0.95), rgba(15, 15, 26, 0.98)), 
                 url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=1600');
     background-size: cover; background-position: center; background-attachment: fixed; direction: rtl;
 }
 
-/* 🌟 إضافة تأثير النيون اللي بينور ويطفي (Blink / Pulse) 🌟 */
-@keyframes neon-pulse {
-    0% { text-shadow: 0 0 5px #00f3ff, 0 0 10px #00f3ff, 0 0 20px #00f3ff; opacity: 1; }
-    50% { text-shadow: 0 0 2px #00f3ff, 0 0 5px #00f3ff; opacity: 0.8; }
-    100% { text-shadow: 0 0 5px #00f3ff, 0 0 10px #00f3ff, 0 0 20px #00f3ff; opacity: 1; }
+/* 🌟 تأثير نيون نابض (ينور ويطفي) 🌟 */
+@keyframes neon-glow {
+    0% { text-shadow: 0 0 5px #00f3ff, 0 0 10px #00f3ff, 0 0 20px #00f3ff; }
+    50% { text-shadow: 0 0 2px #00f3ff, 0 0 4px #00f3ff, 0 0 10px #00f3ff; opacity: 0.9; }
+    100% { text-shadow: 0 0 5px #00f3ff, 0 0 10px #00f3ff, 0 0 20px #00f3ff; }
 }
 
 .neon-title { 
     color: #fff; text-align: center; font-size: 3.5rem; font-weight: bold; 
-    margin-bottom: 5px; padding-top: 20px;
-    animation: neon-pulse 2s infinite; /* تشغيل الحركة */
+    margin-bottom: 10px; padding-top: 20px;
+    animation: neon-glow 2.5s infinite ease-in-out;
 }
 
-.neon-subtitle { color: #ff007f; text-align: center; font-size: 1.5rem; text-shadow: 0 0 5px #ff007f, 0 0 10px #ff007f; margin-bottom: 40px; }
+.neon-subtitle { color: #ff007f; text-align: center; font-size: 1.5rem; text-shadow: 0 0 5px #ff007f; margin-bottom: 40px; }
 
-/* 🛠️ تظبيط مقاسات الكروت عشان الكلام مايدخلش في بعضه 🛠️ */
+/* 🛠️ حل مشكلة تداخل الكلام العربي رأسيًا 🛠️ */
 .book-card { 
-    background: rgba(25, 25, 40, 0.65); border: 2px solid #ff007f; border-radius: 15px; 
-    padding: 20px; text-align: center; box-shadow: 0 0 15px rgba(255, 0, 127, 0.3); 
-    transition: all 0.3s ease;
-    display: flex; flex-direction: column; justify-content: space-between; /* توزيع المسافات صح */
-    height: 100%; min-height: 420px; margin-bottom: 20px;
+    background: rgba(25, 25, 40, 0.85); border: 2px solid #ff007f; border-radius: 15px; 
+    padding: 25px; text-align: center; box-shadow: 0 0 15px rgba(255, 0, 127, 0.2); 
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 480px; margin-bottom: 30px;
 }
-.book-card:hover { transform: translateY(-10px); box-shadow: 0 0 25px rgba(255, 0, 127, 0.8); }
-.book-img { width: 100%; height: 250px; object-fit: cover; border-radius: 10px; border: 1px solid #ff007f; margin-bottom: 15px; }
-.book-title { color: #fff; font-size: 1.4rem; font-weight: bold; text-shadow: 0 0 5px #fff; line-height: 1.3; margin-bottom: 10px;}
-.book-author { color: #00f3ff; font-size: 1rem; text-shadow: 0 0 3px #00f3ff; margin-bottom: 5px;}
-.book-category { color: #f1c40f; font-size: 0.9rem; margin-bottom: 15px; }
-.book-price { color: #39ff14; font-size: 1.4rem; font-weight: bold; text-shadow: 0 0 5px #39ff14; margin-top: auto; } /* margin-top: auto يخلي السعر دايماً تحت */
+.book-img { width: 100%; height: 260px; object-fit: cover; border-radius: 10px; border: 1px solid #ff007f; margin-bottom: 15px; }
 
-div.stButton > button { background-color: transparent !important; color: #00f3ff !important; border: 2px solid #00f3ff !important; border-radius: 8px !important; font-weight: bold !important; box-shadow: 0 0 10px rgba(0, 243, 255, 0.4) !important; text-shadow: 0 0 5px #00f3ff !important; width: 100%; margin-top: 10px;}
+/* ضبط التباعد والارتفاع السطري للنصوص العربية */
+.book-title { color: #fff; font-size: 1.5rem; font-weight: bold; line-height: 1.6 !important; margin: 10px 0 !important; text-shadow: 0 0 5px #fff; }
+.book-author { color: #00f3ff; font-size: 1.1rem; line-height: 1.5 !important; margin-bottom: 8px !important; }
+.book-category { color: #f1c40f; font-size: 0.95rem; margin-bottom: 15px !important; display: block; }
+.book-price { color: #39ff14; font-size: 1.4rem; font-weight: bold; text-shadow: 0 0 5px #39ff14; margin-top: auto; padding-top: 10px; }
+
+/* أزرار الموقع */
+div.stButton > button { background-color: transparent !important; color: #00f3ff !important; border: 2px solid #00f3ff !important; border-radius: 8px !important; font-weight: bold !important; width: 100%; margin-top: 10px;}
 div.stButton > button:hover { background-color: #00f3ff !important; color: #121212 !important; box-shadow: 0 0 25px #00f3ff !important; }
 
-/* زرار الواتساب */
+/* زرار واتساب الثابت */
 .whatsapp-btn { position: fixed; bottom: 20px; left: 20px; background-color: #25d366; color: white !important; padding: 15px 25px; border-radius: 50px; font-weight: bold; text-decoration: none; box-shadow: 0 0 15px #25d366; z-index: 9999; font-size: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.3s; }
 .whatsapp-btn:hover { transform: scale(1.1); box-shadow: 0 0 25px #25d366; color: white; }
 </style>
 """
 st.markdown(neon_style, unsafe_allow_html=True)
 
-# 3. إعداد الذاكرة (Books, Categories, Cart, Orders)
+# 3. دالة الحفظ التلقائي للأوردرات في جيت هاب (GitHub API)
+def save_order_to_github(new_order):
+    try:
+        # قراءة البيانات السرية من إعدادات الـ Secrets في Streamlit
+        token = st.secrets["GITHUB_TOKEN"]
+        repo = st.secrets["GITHUB_REPO"]  # صيغته تكون: username/repo-name
+        path = "orders.json"
+        
+        url = f"https://api.github.com/repos/{repo}/contents/{path}"
+        headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
+        
+        # جلب الملف الحالي لو موجود عشان ندمج الأوردرات
+        response = requests.get(url, headers=headers)
+        current_orders = []
+        sha = None
+        
+        if response.status_code == 200:
+            file_data = response.json()
+            sha = file_data["sha"]
+            content = base64.b64decode(file_data["content"]).decode('utf-8')
+            current_orders = json.loads(content)
+            
+        # إضافة الأوردر الجديد للقائمة
+        current_orders.append(new_order)
+        
+        # تشفير البيانات المحدثة وإرسالها لجيت هاب
+        updated_content = json.dumps(current_orders, ensure_ascii=False, indent=4)
+        encoded_content = base64.b64encode(updated_content.encode('utf-8')).decode('utf-8')
+        
+        payload = {"message": "📦 تسجيل أوردر جديد عبر الموقع", "content": encoded_content}
+        if sha:
+            payload["sha"] = sha
+            
+        put_response = requests.put(url, headers=headers, json=payload)
+        return put_response.status_code in [200, 201]
+    except Exception as e:
+        return False
+
+# 4. إعداد هياكل البيانات في الذاكرة (تشتغل بجانب جيت هاب)
 if "categories" not in st.session_state:
     st.session_state.categories = ["روايات مترجمة", "فانتازيا", "تنمية ذاتية", "خيال علمي ورعب"]
 
@@ -65,20 +106,31 @@ if "books" not in st.session_state:
         {"id": "b3", "title": "فن اللامبالاة", "author": "مارك مانسون", "price": 120, "category": "تنمية ذاتية", "image": "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=400"}
     ]
 
-if "cart" not in st.session_state:
-    st.session_state.cart = []
-if "orders" not in st.session_state:
-    st.session_state.orders = []
+if "cart" not in st.session_state: st.session_state.cart = []
+if "orders" not in st.session_state: st.session_state.orders = []
+if "comments" not in st.session_state: st.session_state.comments = {}
 
-# 4. القائمة الجانبية
-menu = st.sidebar.selectbox("اختار الصفحة", ["🛒 المتجر الإلكتروني", "🔐 لوحة الإدارة"])
+# 5. 🔐 نظام الأمان وإخفاء لوحة الإدارة تماماً
+st.sidebar.markdown("### 🧭 التنقل")
+page_options = ["🛒 المتجر الإلكتروني"]
+
+# خانة سرية ومخفية تماماً في أسفل السايدبار لدخول المدير
+st.sidebar.markdown("---")
+admin_password = st.sidebar.text_input("🔑 تسجيل دخول الإدارة (مخفي للزوار)", type="password")
+
+# لو الباسورد صح، الخيار بيظهر في القائمة فوق أوتوماتيك
+if admin_password == "admin123":
+    page_options.append("🔐 لوحة الإدارة")
+    st.sidebar.success("تم تفعيل صلاحيات المدير!")
+
+menu = st.sidebar.selectbox("اختار الصفحة المعروضة:", page_options)
 
 # ==================== صفحة المتجر ====================
 if menu == "🛒 المتجر الإلكتروني":
     st.markdown('<div class="neon-title">World of Books 📚</div>', unsafe_allow_html=True)
     st.markdown('<div class="neon-subtitle">عالمك الخاص لأجمل الكتب والروايات النيون</div>', unsafe_allow_html=True)
 
-    # شريط البحث والفلترة
+    # البحث والفلترة
     col_search, col_filter = st.columns(2)
     with col_search:
         search_query = st.text_input("🔍 ابحث عن اسم رواية أو مؤلف:")
@@ -86,15 +138,9 @@ if menu == "🛒 المتجر الإلكتروني":
         categories_filter = ["الكل"] + st.session_state.categories
         selected_category = st.selectbox("📂 تصنيف الكتب:", categories_filter)
 
-    # فلترة الكتب
-    filtered_books = []
-    for book in st.session_state.books:
-        match_category = (selected_category == "الكل") or (book["category"] == selected_category)
-        match_search = search_query.lower() in book["title"].lower() or search_query.lower() in book["author"].lower()
-        if match_category and match_search:
-            filtered_books.append(book)
+    # فلترة الكتب المعروضة
+    filtered_books = [b for b in st.session_state.books if ((selected_category == "الكل" or b["category"] == selected_category) and (search_query.lower() in b["title"].lower() or search_query.lower() in b["author"].lower()))]
 
-    # عرض الكتب
     if not filtered_books:
         st.warning("عفواً، لا يوجد كتب تطابق بحثك حالياً.")
     else:
@@ -113,113 +159,122 @@ if menu == "🛒 المتجر الإلكتروني":
                 </div>
                 """, unsafe_allow_html=True)
                 
-                if st.button(f"أضف للسلة 🛒", key=f"btn_{book['id']}"):
+                # زر الإضافة للسلة
+                if st.button(f"أضف للسلة 🛒", key=f"add_{book['id']}"):
                     st.session_state.cart.append(book)
-                    st.toast(f"تم إضافة {book['title']} للسلة بنجاح!")
+                    st.toast(f"تم إضافة {book['title']} للسلة!")
 
-    # ==================== قسم عربة التسوق ====================
+                # 💬 نظام التعليقات والآراء تحت كل كتاب
+                with st.expander("💬 آراء القراء والتعليقات"):
+                    book_comments = st.session_state.comments.get(book['id'], [])
+                    if not book_comments:
+                        st.caption("لا توجد تعليقات بعد، كن أول من يكتب رأيه!")
+                    for comment in book_comments:
+                        st.markdown(f"• <span style='color:#00f3ff;'>{comment}</span>", unsafe_allow_html=True)
+                    
+                    # فورم كتابة تعليق جديد
+                    new_comment = st.text_input("اكتب رأيك هنا:", key=f"in_{book['id']}", placeholder="رأيك في الرواية...")
+                    if st.button("نشر الرأي", key=f"pub_{book['id']}"):
+                        if new_comment:
+                            st.session_state.comments.setdefault(book['id'], []).append(new_comment)
+                            st.rerun()
+
+    # ==================== قسم سلة المشتريات والطلب ====================
     st.markdown("---")
     st.markdown('<div class="neon-subtitle" style="text-align: right;">🛒 سلة المشتريات الخاصة بك</div>', unsafe_allow_html=True)
     
-    if len(st.session_state.cart) == 0:
-        st.info("السلة فارغة حالياً. تصفح الكتب وأضف ما يعجبك!")
-    else:
+    if len(st.session_state.cart) != 0:
         total_price = sum(item['price'] for item in st.session_state.cart)
         book_names = [item['title'] for item in st.session_state.cart]
-        
         st.success(f"لديك **{len(st.session_state.cart)}** كتب في السلة | الإجمالي: **{total_price} جنيه**")
         
         with st.form("checkout_form"):
-            st.write("✍️ **أكمل بياناتك لتأكيد الطلب:**")
             name = st.text_input("اسمك بالكامل")
             phone = st.text_input("رقم تليفونك")
             address = st.text_input("عنوان الشحن بالتفصيل")
-            submit_order = st.form_submit_button("تأكيد الطلب شحن 🚚")
+            submit_order = st.form_submit_button("تأكيد الطلب وشحن 🚚")
             
             if submit_order:
                 if name and phone and address:
-                    new_order = {"books": book_names, "total_price": total_price, "name": name, "phone": phone, "address": address}
-                    st.session_state.orders.append(new_order)
+                    order_data = {"books": book_names, "total_price": total_price, "name": name, "phone": phone, "address": address}
+                    
+                    # تفعيل الحفظ التلقائي في جيت هاب
+                    git_saved = save_order_to_github(order_data)
+                    st.session_state.orders.append(order_data) # حفظ احتياطي في الذاكرة
                     st.session_state.cart = [] 
-                    st.success("تم إرسال طلبك بنجاح! جاري التجهيز للشحن 🎉")
+                    
+                    if git_saved:
+                        st.success("تم إرسال طلبك وحفظه في السيرفر الآمن بنجاح! 🎉")
+                    else:
+                        st.success("تم تسجيل طلبك بنجاح وجاري التواصل (تأكد من إعداد مفاتيح جيت هاب السريعة)")
+                    st.rerun()
                 else:
                     st.error("من فضلك املأ كل البيانات.")
 
-        if st.button("🗑️ إفراغ السلة"):
-            st.session_state.cart = []
-            st.rerun()
-
-# ==================== صفحة الإدارة ====================
+# ==================== صفحة الإدارة المخفية ====================
 elif menu == "🔐 لوحة الإدارة":
-    st.title("🔐 لوحة تحكم المسؤول")
-    password = st.text_input("ادخل كلمة السر", type="password")
+    st.title("🔐 لوحة تحكم المدير المسؤول")
     
-    if password == "admin123":
-        # تقسيم لوحة الإدارة لتبويبات (Tabs) لتنظيم الشغل
-        tab1, tab2, tab3 = st.tabs(["📦 الأوردرات الجديدة", "➕ إضافة كتاب جديد", "📂 إضافة قسم جديد"])
-        
-        # التبويب الأول: الأوردرات
-        with tab1:
-            if len(st.session_state.orders) == 0:
-                st.info("مفيش أي أوردرات جديدة حالياً.")
-            else:
-                for i, order in enumerate(st.session_state.orders):
-                    with st.expander(f"📦 أوردر رقم {i+1} - {order['name']}"):
-                        st.write(f"**رقم الهاتف:** {order['phone']} | **العنوان:** {order['address']}")
-                        st.write(f"**الكتب المطلوبة:** {', '.join(order['books'])}")
-                        st.write(f"**الإجمالي:** {order['total_price']} جنيه")
+    tab1, tab2, tab3, tab4 = st.tabs(["📦 الأوردرات الواردة", "➕ إضافة كتاب", "📂 إضافة قسم", "✏️ تعديل أسماء الكتب"])
+    
+    # 1. تَب عرض الأوردرات
+    with tab1:
+        if len(st.session_state.orders) == 0:
+            st.info("لا توجد طلبات جديدة حالياً.")
+        else:
+            for i, order in enumerate(st.session_state.orders):
+                with st.expander(f"الأوردر رقم {i+1} - من: {order['name']}"):
+                    st.write(f"**الهاتف:** {order['phone']} | **العنوان:** {order['address']}")
+                    st.write(f"**الكتب:** {', '.join(order['books'])}")
+                    st.write(f"**الحساب الكلي:** {order['total_price']} جنيه")
 
-        # التبويب الثاني: إضافة كتاب
-        with tab2:
-            st.subheader("إضافة رواية أو كتاب للمتجر")
-            with st.form("add_book_form", clear_on_submit=True):
-                new_title = st.text_input("اسم الكتاب")
-                new_author = st.text_input("اسم المؤلف")
-                new_category = st.selectbox("اختار القسم", st.session_state.categories)
-                new_price = st.number_input("السعر (بالجنيه)", min_value=1, step=5)
-                # رفع الصورة
-                uploaded_image = st.file_uploader("ارفع صورة الغلاف (JPG/PNG)", type=["png", "jpg", "jpeg"])
-                
-                submit_book = st.form_submit_button("✅ إضافة الكتاب للمتجر")
-                
-                if submit_book:
-                    if new_title and new_author and uploaded_image:
-                        # تحويل الصورة المرفوعة لصيغة يقدر الـ HTML يقرأها (Base64)
-                        bytes_data = uploaded_image.getvalue()
-                        base64_img = base64.b64encode(bytes_data).decode()
-                        img_src = f"data:image/{uploaded_image.type.split('/')[-1]};base64,{base64_img}"
-                        
-                        new_book_data = {
-                            "id": f"b{len(st.session_state.books) + 1}",
-                            "title": new_title,
-                            "author": new_author,
-                            "price": new_price,
-                            "category": new_category,
-                            "image": img_src
-                        }
-                        st.session_state.books.append(new_book_data)
-                        st.success(f"تمت إضافة كتاب '{new_title}' بنجاح!")
-                    else:
-                        st.error("لازم تكتب اسم الكتاب والمؤلف وترفع الصورة!")
+    # 2. تَب إضافة كتاب جديد
+    with tab2:
+        st.subheader("إضافة كتاب جديد")
+        with st.form("add_book", clear_on_submit=True):
+            t = st.text_input("اسم الكتاب")
+            a = st.text_input("اسم المؤلف")
+            c = st.selectbox("اختار القسم", st.session_state.categories)
+            p = st.number_input("السعر", min_value=1, step=5)
+            img = st.file_uploader("صورة الغلاف", type=["png", "jpg", "jpeg"])
+            if st.form_submit_button("إضافة"):
+                if t and a and img:
+                    base64_img = base64.b64encode(img.getvalue()).decode()
+                    src = f"data:image/{img.type.split('/')[-1]};base64,{base64_img}"
+                    st.session_state.books.append({"id": f"b{len(st.session_state.books)+1}", "title": t, "author": a, "price": p, "category": c, "image": src})
+                    st.success(f"تم إضافة {t}")
+                    st.rerun()
 
-        # التبويب الثالث: إضافة قسم
-        with tab3:
-            st.subheader("إضافة قسم جديد (مثال: تاريخ، رعب، الخ)")
-            with st.form("add_category_form", clear_on_submit=True):
-                new_cat_name = st.text_input("اسم القسم الجديد")
-                submit_cat = st.form_submit_button("✅ حفظ القسم")
-                
-                if submit_cat:
-                    if new_cat_name and new_cat_name not in st.session_state.categories:
-                        st.session_state.categories.append(new_cat_name)
-                        st.success(f"تم إضافة قسم '{new_cat_name}' وتقدر تختاره دلوقتي وأنت بتضيف أي كتاب جديد.")
-                    elif new_cat_name in st.session_state.categories:
-                        st.warning("القسم ده موجود بالفعل!")
-                    else:
-                        st.error("اكتب اسم القسم أولاً.")
-    elif password != "":
-        st.error("كلمة السر خطأ!")
+    # 3. تَب إضافة قسم جديد
+    with tab3:
+        st.subheader("إضافة قسم جديد")
+        with st.form("add_cat", clear_on_submit=True):
+            nc = st.text_input("اسم القسم")
+            if st.form_submit_button("حفظ القسم") and nc:
+                st.session_state.categories.append(nc)
+                st.success("تم إضافة القسم الجديد")
+                st.rerun()
 
-# زرار الواتساب الثابت
+    # 4. ✏️ تَب تعديل أسماء الكتب الحالية
+    with tab4:
+        st.subheader("تعديل وتحديث بيانات الكتب الموجودة")
+        if not st.session_state.books:
+            st.info("لا توجد كتب لتعديلها.")
+        else:
+            book_to_edit = st.selectbox("اختار الكتاب المراد تعديله:", st.session_state.books, format_func=lambda x: x["title"])
+            
+            with st.form("edit_book_form"):
+                updated_title = st.text_input("تعديل اسم الكتاب:", value=book_to_edit["title"])
+                updated_author = st.text_input("تعديل اسم المؤلف:", value=book_to_edit["author"])
+                updated_price = st.number_input("تعديل السعر:", value=book_to_edit["price"], min_value=1)
+                
+                if st.form_submit_button("💾 حفظ التعديلات الجديدة"):
+                    book_to_edit["title"] = updated_title
+                    book_to_edit["author"] = updated_author
+                    book_to_edit["price"] = updated_price
+                    st.success("تم تحديث بيانات الكتاب بنجاح بالمتجر!")
+                    st.rerun()
+
+# زرار الواتساب
 whatsapp_url = "https://wa.me/201149243249?text=أهلاً%20World%20of%20Books%20عايز%20استفسر%20عن%20رواية"
 st.markdown(f'<a href="{whatsapp_url}" class="whatsapp-btn" target="_blank">💬 تواصل واتساب</a>', unsafe_allow_html=True)
