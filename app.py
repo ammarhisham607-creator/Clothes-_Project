@@ -6,21 +6,32 @@ import json
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="World of Books", page_icon="📚", layout="wide")
 
-# 2. كود الديكور وتعديل المقاسات والنيون المتحرك (CSS)
+# 2. كود الديكور والـ CSS المطور لمنع انكماش وتداخل الكلام
 neon_style = """
 <style>
 /* خلفية الموقع العامة */
 .stApp {
     background: linear-gradient(rgba(15, 15, 26, 0.95), rgba(15, 15, 26, 0.98)), 
                 url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=1600');
-    background-size: cover; background-position: center; background-attachment: fixed; direction: rtl;
+    background-size: cover; background-position: center; background-attachment: fixed;
 }
 
-/* 🌟 تأثير نيون نابض (ينور ويطفي) 🌟 */
+/* 🛠️ الحل الجذري لمشكلة الكلام المفرود بالطول: توجيه المحتوى بأمان دون كسر أعمدة Streamlit */
+.main .block-container, [data-testid="stSidebarUserContent"] {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+/* ضبط عناصر المدخلات والقوائم لتأخذ العرض بالكامل وتمنع الانكماش */
+.stTextInput width, .stSelectbox width, .stNumberInput width {
+    width: 100% !important;
+}
+
+/* 🌟 تأثير نيون نابض (ينور ويطفي) للعنوان الرئيسي 🌟 */
 @keyframes neon-glow {
-    0% { text-shadow: 0 0 5px #00f3ff, 0 0 10px #00f3ff, 0 0 20px #00f3ff; }
-    50% { text-shadow: 0 0 2px #00f3ff, 0 0 4px #00f3ff, 0 0 10px #00f3ff; opacity: 0.9; }
-    100% { text-shadow: 0 0 5px #00f3ff, 0 0 10px #00f3ff, 0 0 20px #00f3ff; }
+    0% { text-shadow: 0 0 8px #00f3ff, 0 0 15px #00f3ff, 0 0 30px #00f3ff; opacity: 1; }
+    50% { text-shadow: 0 0 3px #00f3ff, 0 0 8px #00f3ff, 0 0 15px #00f3ff; opacity: 0.85; }
+    100% { text-shadow: 0 0 8px #00f3ff, 0 0 15px #00f3ff, 0 0 30px #00f3ff; opacity: 1; }
 }
 
 .neon-title { 
@@ -31,44 +42,43 @@ neon_style = """
 
 .neon-subtitle { color: #ff007f; text-align: center; font-size: 1.5rem; text-shadow: 0 0 5px #ff007f; margin-bottom: 40px; }
 
-/* 🛠️ حل مشكلة تداخل الكلام العربي رأسيًا 🛠️ */
+/* كروت الكتب وضمان ثبات أبعادها */
 .book-card { 
     background: rgba(25, 25, 40, 0.85); border: 2px solid #ff007f; border-radius: 15px; 
     padding: 25px; text-align: center; box-shadow: 0 0 15px rgba(255, 0, 127, 0.2); 
     display: flex; flex-direction: column; justify-content: space-between;
-    min-height: 480px; margin-bottom: 30px;
+    min-height: 500px; margin-bottom: 30px;
+    width: 100% !important;
 }
 .book-img { width: 100%; height: 260px; object-fit: cover; border-radius: 10px; border: 1px solid #ff007f; margin-bottom: 15px; }
 
-/* ضبط التباعد والارتفاع السطري للنصوص العربية */
-.book-title { color: #fff; font-size: 1.5rem; font-weight: bold; line-height: 1.6 !important; margin: 10px 0 !important; text-shadow: 0 0 5px #fff; }
-.book-author { color: #00f3ff; font-size: 1.1rem; line-height: 1.5 !important; margin-bottom: 8px !important; }
-.book-category { color: #f1c40f; font-size: 0.95rem; margin-bottom: 15px !important; display: block; }
+/* تباعد مريح للاسطر العربية */
+.book-title { color: #fff; font-size: 1.4rem; font-weight: bold; line-height: 1.6 !important; margin: 10px 0 !important; }
+.book-author { color: #00f3ff; font-size: 1.05rem; line-height: 1.5 !important; margin-bottom: 8px !important; }
+.book-category { color: #f1c40f; font-size: 0.9rem; margin-bottom: 15px !important; display: block; }
 .book-price { color: #39ff14; font-size: 1.4rem; font-weight: bold; text-shadow: 0 0 5px #39ff14; margin-top: auto; padding-top: 10px; }
 
-/* أزرار الموقع */
+/* أزرار المتجر */
 div.stButton > button { background-color: transparent !important; color: #00f3ff !important; border: 2px solid #00f3ff !important; border-radius: 8px !important; font-weight: bold !important; width: 100%; margin-top: 10px;}
 div.stButton > button:hover { background-color: #00f3ff !important; color: #121212 !important; box-shadow: 0 0 25px #00f3ff !important; }
 
-/* زرار واتساب الثابت */
+/* زرار واتساب */
 .whatsapp-btn { position: fixed; bottom: 20px; left: 20px; background-color: #25d366; color: white !important; padding: 15px 25px; border-radius: 50px; font-weight: bold; text-decoration: none; box-shadow: 0 0 15px #25d366; z-index: 9999; font-size: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.3s; }
 .whatsapp-btn:hover { transform: scale(1.1); box-shadow: 0 0 25px #25d366; color: white; }
 </style>
 """
 st.markdown(neon_style, unsafe_allow_html=True)
 
-# 3. دالة الحفظ التلقائي للأوردرات في جيت هاب (GitHub API)
+# 3. دالة جيت هاب لرفع وحفظ الأوردرات
 def save_order_to_github(new_order):
     try:
-        # قراءة البيانات السرية من إعدادات الـ Secrets في Streamlit
         token = st.secrets["GITHUB_TOKEN"]
-        repo = st.secrets["GITHUB_REPO"]  # صيغته تكون: username/repo-name
+        repo = st.secrets["GITHUB_REPO"]
         path = "orders.json"
         
         url = f"https://api.github.com/repos/{repo}/contents/{path}"
         headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
         
-        # جلب الملف الحالي لو موجود عشان ندمج الأوردرات
         response = requests.get(url, headers=headers)
         current_orders = []
         sha = None
@@ -79,10 +89,7 @@ def save_order_to_github(new_order):
             content = base64.b64decode(file_data["content"]).decode('utf-8')
             current_orders = json.loads(content)
             
-        # إضافة الأوردر الجديد للقائمة
         current_orders.append(new_order)
-        
-        # تشفير البيانات المحدثة وإرسالها لجيت هاب
         updated_content = json.dumps(current_orders, ensure_ascii=False, indent=4)
         encoded_content = base64.b64encode(updated_content.encode('utf-8')).decode('utf-8')
         
@@ -95,7 +102,7 @@ def save_order_to_github(new_order):
     except Exception as e:
         return False
 
-# 4. إعداد هياكل البيانات في الذاكرة (تشتغل بجانب جيت هاب)
+# 4. إعداد هياكل البيانات في الذاكرة
 if "categories" not in st.session_state:
     st.session_state.categories = ["روايات مترجمة", "فانتازيا", "تنمية ذاتية", "خيال علمي ورعب"]
 
@@ -110,18 +117,16 @@ if "cart" not in st.session_state: st.session_state.cart = []
 if "orders" not in st.session_state: st.session_state.orders = []
 if "comments" not in st.session_state: st.session_state.comments = {}
 
-# 5. 🔐 نظام الأمان وإخفاء لوحة الإدارة تماماً
-st.sidebar.markdown("### 🧭 التنقل")
+# 5. 🔐 نظام حماية وإخفاء لوحة التحكم
+st.sidebar.markdown("### 🧭 القائمة الرئيسية")
 page_options = ["🛒 المتجر الإلكتروني"]
 
-# خانة سرية ومخفية تماماً في أسفل السايدبار لدخول المدير
 st.sidebar.markdown("---")
-admin_password = st.sidebar.text_input("🔑 تسجيل دخول الإدارة (مخفي للزوار)", type="password")
+admin_password = st.sidebar.text_input("🔑 دخول الإدارة (حقل سري)", type="password")
 
-# لو الباسورد صح، الخيار بيظهر في القائمة فوق أوتوماتيك
 if admin_password == "admin123":
     page_options.append("🔐 لوحة الإدارة")
-    st.sidebar.success("تم تفعيل صلاحيات المدير!")
+    st.sidebar.success("تم تفعيل صلاحيات الإدارة بنجاح!")
 
 menu = st.sidebar.selectbox("اختار الصفحة المعروضة:", page_options)
 
@@ -130,7 +135,6 @@ if menu == "🛒 المتجر الإلكتروني":
     st.markdown('<div class="neon-title">World of Books 📚</div>', unsafe_allow_html=True)
     st.markdown('<div class="neon-subtitle">عالمك الخاص لأجمل الكتب والروايات النيون</div>', unsafe_allow_html=True)
 
-    # البحث والفلترة
     col_search, col_filter = st.columns(2)
     with col_search:
         search_query = st.text_input("🔍 ابحث عن اسم رواية أو مؤلف:")
@@ -138,7 +142,6 @@ if menu == "🛒 المتجر الإلكتروني":
         categories_filter = ["الكل"] + st.session_state.categories
         selected_category = st.selectbox("📂 تصنيف الكتب:", categories_filter)
 
-    # فلترة الكتب المعروضة
     filtered_books = [b for b in st.session_state.books if ((selected_category == "الكل" or b["category"] == selected_category) and (search_query.lower() in b["title"].lower() or search_query.lower() in b["author"].lower()))]
 
     if not filtered_books:
@@ -159,27 +162,23 @@ if menu == "🛒 المتجر الإلكتروني":
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # زر الإضافة للسلة
                 if st.button(f"أضف للسلة 🛒", key=f"add_{book['id']}"):
                     st.session_state.cart.append(book)
                     st.toast(f"تم إضافة {book['title']} للسلة!")
 
-                # 💬 نظام التعليقات والآراء تحت كل كتاب
                 with st.expander("💬 آراء القراء والتعليقات"):
                     book_comments = st.session_state.comments.get(book['id'], [])
                     if not book_comments:
-                        st.caption("لا توجد تعليقات بعد، كن أول من يكتب رأيه!")
+                        st.caption("لا توجد تعليقات بعد.")
                     for comment in book_comments:
                         st.markdown(f"• <span style='color:#00f3ff;'>{comment}</span>", unsafe_allow_html=True)
                     
-                    # فورم كتابة تعليق جديد
                     new_comment = st.text_input("اكتب رأيك هنا:", key=f"in_{book['id']}", placeholder="رأيك في الرواية...")
                     if st.button("نشر الرأي", key=f"pub_{book['id']}"):
                         if new_comment:
                             st.session_state.comments.setdefault(book['id'], []).append(new_comment)
                             st.rerun()
 
-    # ==================== قسم سلة المشتريات والطلب ====================
     st.markdown("---")
     st.markdown('<div class="neon-subtitle" style="text-align: right;">🛒 سلة المشتريات الخاصة بك</div>', unsafe_allow_html=True)
     
@@ -197,16 +196,13 @@ if menu == "🛒 المتجر الإلكتروني":
             if submit_order:
                 if name and phone and address:
                     order_data = {"books": book_names, "total_price": total_price, "name": name, "phone": phone, "address": address}
-                    
-                    # تفعيل الحفظ التلقائي في جيت هاب
                     git_saved = save_order_to_github(order_data)
-                    st.session_state.orders.append(order_data) # حفظ احتياطي في الذاكرة
+                    st.session_state.orders.append(order_data)
                     st.session_state.cart = [] 
-                    
                     if git_saved:
-                        st.success("تم إرسال طلبك وحفظه في السيرفر الآمن بنجاح! 🎉")
+                        st.success("تم إرسال طلبك وحفظه على السيرفر الآمن بنجاح! 🎉")
                     else:
-                        st.success("تم تسجيل طلبك بنجاح وجاري التواصل (تأكد من إعداد مفاتيح جيت هاب السريعة)")
+                        st.success("تم تسجيل طلبك بنجاح وجاري المراجعة!")
                     st.rerun()
                 else:
                     st.error("من فضلك املأ كل البيانات.")
@@ -217,7 +213,6 @@ elif menu == "🔐 لوحة الإدارة":
     
     tab1, tab2, tab3, tab4 = st.tabs(["📦 الأوردرات الواردة", "➕ إضافة كتاب", "📂 إضافة قسم", "✏️ تعديل أسماء الكتب"])
     
-    # 1. تَب عرض الأوردرات
     with tab1:
         if len(st.session_state.orders) == 0:
             st.info("لا توجد طلبات جديدة حالياً.")
@@ -228,7 +223,6 @@ elif menu == "🔐 لوحة الإدارة":
                     st.write(f"**الكتب:** {', '.join(order['books'])}")
                     st.write(f"**الحساب الكلي:** {order['total_price']} جنيه")
 
-    # 2. تَب إضافة كتاب جديد
     with tab2:
         st.subheader("إضافة كتاب جديد")
         with st.form("add_book", clear_on_submit=True):
@@ -245,7 +239,6 @@ elif menu == "🔐 لوحة الإدارة":
                     st.success(f"تم إضافة {t}")
                     st.rerun()
 
-    # 3. تَب إضافة قسم جديد
     with tab3:
         st.subheader("إضافة قسم جديد")
         with st.form("add_cat", clear_on_submit=True):
@@ -255,7 +248,6 @@ elif menu == "🔐 لوحة الإدارة":
                 st.success("تم إضافة القسم الجديد")
                 st.rerun()
 
-    # 4. ✏️ تَب تعديل أسماء الكتب الحالية
     with tab4:
         st.subheader("تعديل وتحديث بيانات الكتب الموجودة")
         if not st.session_state.books:
