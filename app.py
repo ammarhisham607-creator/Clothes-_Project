@@ -3,31 +3,26 @@ import base64
 import requests
 import json
 
-# 1. إعدادات الصفحة
+# 1. إعدادات الصفحة العامة
 st.set_page_config(page_title="World of Books", page_icon="📚", layout="wide")
 
-# 2. كود الديكور والـ CSS المطور لمنع انكماش وتداخل الكلام
+# 2. كود الـ CSS المطور لمنع تداخل الكلام وتنسيق المتجر النيون
 neon_style = """
 <style>
 /* خلفية الموقع العامة */
 .stApp {
-    background: linear-gradient(rgba(15, 15, 26, 0.95), rgba(15, 15, 26, 0.98)), 
+    background: linear-gradient(rgba(15, 15, 26, 0.96), rgba(15, 15, 26, 0.98)), 
                 url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=1600');
     background-size: cover; background-position: center; background-attachment: fixed;
 }
 
-/* 🛠️ الحل الجذري لمشكلة الكلام المفرود بالطول: توجيه المحتوى بأمان دون كسر أعمدة Streamlit */
+/* توجيه المحتوى العربي بأمان دون كسر الأبعاد */
 .main .block-container, [data-testid="stSidebarUserContent"] {
     direction: rtl !important;
     text-align: right !important;
 }
 
-/* ضبط عناصر المدخلات والقوائم لتأخذ العرض بالكامل وتمنع الانكماش */
-.stTextInput width, .stSelectbox width, .stNumberInput width {
-    width: 100% !important;
-}
-
-/* 🌟 تأثير نيون نابض (ينور ويطفي) للعنوان الرئيسي 🌟 */
+/* تأثير نيون نابض للعنوان الرئيسي */
 @keyframes neon-glow {
     0% { text-shadow: 0 0 8px #00f3ff, 0 0 15px #00f3ff, 0 0 30px #00f3ff; opacity: 1; }
     50% { text-shadow: 0 0 3px #00f3ff, 0 0 8px #00f3ff, 0 0 15px #00f3ff; opacity: 0.85; }
@@ -42,34 +37,35 @@ neon_style = """
 
 .neon-subtitle { color: #ff007f; text-align: center; font-size: 1.5rem; text-shadow: 0 0 5px #ff007f; margin-bottom: 40px; }
 
-/* كروت الكتب وضمان ثبات أبعادها */
+/* كروت الكتب وضمان عدم انكماش النصوص العربية */
 .book-card { 
     background: rgba(25, 25, 40, 0.85); border: 2px solid #ff007f; border-radius: 15px; 
     padding: 25px; text-align: center; box-shadow: 0 0 15px rgba(255, 0, 127, 0.2); 
     display: flex; flex-direction: column; justify-content: space-between;
-    min-height: 500px; margin-bottom: 30px;
+    min-height: 520px; margin-bottom: 20px;
     width: 100% !important;
 }
-.book-img { width: 100%; height: 260px; object-fit: cover; border-radius: 10px; border: 1px solid #ff007f; margin-bottom: 15px; }
+.book-img { width: 100%; height: 280px; object-fit: cover; border-radius: 10px; border: 1px solid #ff007f; margin-bottom: 15px; }
 
-/* تباعد مريح للاسطر العربية */
-.book-title { color: #fff; font-size: 1.4rem; font-weight: bold; line-height: 1.6 !important; margin: 10px 0 !important; }
-.book-author { color: #00f3ff; font-size: 1.05rem; line-height: 1.5 !important; margin-bottom: 8px !important; }
-.book-category { color: #f1c40f; font-size: 0.9rem; margin-bottom: 15px !important; display: block; }
+/* تنسيق النصوص والارتفاع السطري */
+.book-title { color: #fff; font-size: 1.4rem; font-weight: bold; line-height: 1.6 !important; margin: 5px 0 !important; }
+.book-author { color: #00f3ff; font-size: 1.05rem; line-height: 1.5 !important; margin-bottom: 5px !important; }
+.book-rating-display { color: #f1c40f; font-size: 1.1rem; margin-bottom: 5px; font-weight: bold; }
+.book-category { color: #a0a0b0; font-size: 0.9rem; margin-bottom: 15px !important; display: block; }
 .book-price { color: #39ff14; font-size: 1.4rem; font-weight: bold; text-shadow: 0 0 5px #39ff14; margin-top: auto; padding-top: 10px; }
 
 /* أزرار المتجر */
-div.stButton > button { background-color: transparent !important; color: #00f3ff !important; border: 2px solid #00f3ff !important; border-radius: 8px !important; font-weight: bold !important; width: 100%; margin-top: 10px;}
+div.stButton > button { background-color: transparent !important; color: #00f3ff !important; border: 2px solid #00f3ff !important; border-radius: 8px !important; font-weight: bold !important; width: 100%; margin-top: 5px;}
 div.stButton > button:hover { background-color: #00f3ff !important; color: #121212 !important; box-shadow: 0 0 25px #00f3ff !important; }
 
-/* زرار واتساب */
+/* زرار واتساب العائم */
 .whatsapp-btn { position: fixed; bottom: 20px; left: 20px; background-color: #25d366; color: white !important; padding: 15px 25px; border-radius: 50px; font-weight: bold; text-decoration: none; box-shadow: 0 0 15px #25d366; z-index: 9999; font-size: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.3s; }
 .whatsapp-btn:hover { transform: scale(1.1); box-shadow: 0 0 25px #25d366; color: white; }
 </style>
 """
 st.markdown(neon_style, unsafe_allow_html=True)
 
-# 3. دالة جيت هاب لرفع وحفظ الأوردرات
+# 3. دالة GitHub API لحفظ الطلبات
 def save_order_to_github(new_order):
     try:
         token = st.secrets["GITHUB_TOKEN"]
@@ -102,39 +98,73 @@ def save_order_to_github(new_order):
     except Exception as e:
         return False
 
-# 4. إعداد هياكل البيانات في الذاكرة
+# 4. إعداد قاعدة البيانات بالروايات الحقيقية والصحيحة في الذاكرة
 if "categories" not in st.session_state:
-    st.session_state.categories = ["روايات مترجمة", "فانتازيا", "تنمية ذاتية", "خيال علمي ورعب"]
+    st.session_state.categories = ["روايات فانتازيا", "رعب وغموض", "أدب وروايات عالمية", "تنمية ذاتية وفكر"]
 
 if "books" not in st.session_state:
     st.session_state.books = [
-        {"id": "b1", "title": "رواية الخيميائي", "author": "باولو كويلو", "price": 150, "category": "روايات مترجمة", "image": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400"},
-        {"id": "b2", "title": "أرض زيكولا", "author": "عمرو عبد الحميد", "price": 180, "category": "فانتازيا", "image": "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=400"},
-        {"id": "b3", "title": "فن اللامبالاة", "author": "مارك مانسون", "price": 120, "category": "تنمية ذاتية", "image": "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=400"}
+        {
+            "id": "b1", 
+            "title": "رواية الفيل الأزرق", 
+            "author": "أحمد مراد", 
+            "price": 150, 
+            "category": "رعب وغموض", 
+            "image": "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400",
+            "rating": 4.8
+        },
+        {
+            "id": "b2", 
+            "title": "رواية أرض زيكولا", 
+            "author": "عمرو عبد الحميد", 
+            "price": 130, 
+            "category": "روايات فانتازيا", 
+            "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400",
+            "rating": 4.7
+        },
+        {
+            "id": "b3", 
+            "title": "رواية يوتوبيا", 
+            "author": "د. أحمد خالد توفيق", 
+            "price": 110, 
+            "category": "رعب وغموض", 
+            "image": "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=400",
+            "rating": 4.5
+        },
+        {
+            "id": "b4", 
+            "title": "كتاب لأنك الله", 
+            "author": "علي بن جابر الفيفي", 
+            "price": 95, 
+            "category": "تنمية ذاتية وفكر", 
+            "image": "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?q=80&w=400",
+            "rating": 4.9
+        }
     ]
 
 if "cart" not in st.session_state: st.session_state.cart = []
 if "orders" not in st.session_state: st.session_state.orders = []
 if "comments" not in st.session_state: st.session_state.comments = {}
 
-# 5. 🔐 نظام حماية وإخفاء لوحة التحكم
+# 5. 🔐 إخفاء لوحة الإدارة تماماً للأمان
 st.sidebar.markdown("### 🧭 القائمة الرئيسية")
 page_options = ["🛒 المتجر الإلكتروني"]
 
 st.sidebar.markdown("---")
-admin_password = st.sidebar.text_input("🔑 دخول الإدارة (حقل سري)", type="password")
+admin_password = st.sidebar.text_input("🔑 دخول الإدارة (حقل سري وعازل)", type="password")
 
 if admin_password == "admin123":
     page_options.append("🔐 لوحة الإدارة")
-    st.sidebar.success("تم تفعيل صلاحيات الإدارة بنجاح!")
+    st.sidebar.success("مرحباً بك أيها المدير المسؤول!")
 
 menu = st.sidebar.selectbox("اختار الصفحة المعروضة:", page_options)
 
 # ==================== صفحة المتجر ====================
 if menu == "🛒 المتجر الإلكتروني":
     st.markdown('<div class="neon-title">World of Books 📚</div>', unsafe_allow_html=True)
-    st.markdown('<div class="neon-subtitle">عالمك الخاص لأجمل الكتب والروايات النيون</div>', unsafe_allow_html=True)
+    st.markdown('<div class="neon-subtitle">عالمك الخاص لأجمل الكتب والروايات الحقيقية والنيون</div>', unsafe_allow_html=True)
 
+    # البحث والفلترة
     col_search, col_filter = st.columns(2)
     with col_search:
         search_query = st.text_input("🔍 ابحث عن اسم رواية أو مؤلف:")
@@ -142,6 +172,7 @@ if menu == "🛒 المتجر الإلكتروني":
         categories_filter = ["الكل"] + st.session_state.categories
         selected_category = st.selectbox("📂 تصنيف الكتب:", categories_filter)
 
+    # تصفية الكتب بناءً على البحث
     filtered_books = [b for b in st.session_state.books if ((selected_category == "الكل" or b["category"] == selected_category) and (search_query.lower() in b["title"].lower() or search_query.lower() in b["author"].lower()))]
 
     if not filtered_books:
@@ -150,22 +181,41 @@ if menu == "🛒 المتجر الإلكتروني":
         cols = st.columns(3)
         for index, book in enumerate(filtered_books):
             with cols[index % 3]:
+                # عرض كارت الكتاب مع النجوم المحدثة تلقائياً
                 st.markdown(f"""
                 <div class="book-card">
                     <div>
                         <img src="{book['image']}" class="book-img">
                         <div class="book-title">{book['title']}</div>
                         <div class="book-author">تأليف: {book['author']}</div>
+                        <div class="book-rating-display">⭐ {book['rating']} / 5</div>
                         <div class="book-category">[{book['category']}]</div>
                     </div>
                     <div class="book-price">{book['price']} جنيه</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
+                # زر الإضافة إلى السلة
                 if st.button(f"أضف للسلة 🛒", key=f"add_{book['id']}"):
                     st.session_state.cart.append(book)
                     st.toast(f"تم إضافة {book['title']} للسلة!")
 
+                # ⭐ زرر والمنزلق الخاص بالتقييم الفوري
+                current_user_rating = st.select_slider(
+                    "⭐ قيم هذه الرواية:",
+                    options=[1, 2, 3, 4, 5],
+                    value=5,
+                    key=f"rate_slider_{book['id']}"
+                )
+                
+                # زرار حفظ التقييم لتحديث الكارت فوراً
+                if st.button("تأكيد التقييم 🌟", key=f"btn_rate_{book['id']}"):
+                    # معادلة بسيطة لتحديث التقييم الحالي ليصبح تفاعلياً
+                    book["rating"] = round((book["rating"] + current_user_rating) / 2, 1)
+                    st.toast("شكرًا لتقييمك الرائع! ❤️")
+                    st.rerun()
+
+                # 💬 آراء القراء والتعليقات
                 with st.expander("💬 آراء القراء والتعليقات"):
                     book_comments = st.session_state.comments.get(book['id'], [])
                     if not book_comments:
@@ -179,6 +229,7 @@ if menu == "🛒 المتجر الإلكتروني":
                             st.session_state.comments.setdefault(book['id'], []).append(new_comment)
                             st.rerun()
 
+    # ==================== سلة المشتريات والطلب ====================
     st.markdown("---")
     st.markdown('<div class="neon-subtitle" style="text-align: right;">🛒 سلة المشتريات الخاصة بك</div>', unsafe_allow_html=True)
     
@@ -202,16 +253,16 @@ if menu == "🛒 المتجر الإلكتروني":
                     if git_saved:
                         st.success("تم إرسال طلبك وحفظه على السيرفر الآمن بنجاح! 🎉")
                     else:
-                        st.success("تم تسجيل طلبك بنجاح وجاري المراجعة!")
+                        st.success("تم تسجيل طلبك بنجاح وجاري المراجعة والشحن!")
                     st.rerun()
                 else:
-                    st.error("من فضلك املأ كل البيانات.")
+                    st.error("من فضلك املأ كل البيانات لإتمام الشحن.")
 
 # ==================== صفحة الإدارة المخفية ====================
 elif menu == "🔐 لوحة الإدارة":
     st.title("🔐 لوحة تحكم المدير المسؤول")
     
-    tab1, tab2, tab3, tab4 = st.tabs(["📦 الأوردرات الواردة", "➕ إضافة كتاب", "📂 إضافة قسم", "✏️ تعديل أسماء الكتب"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📦 الأوردرات الواردة", "➕ إضافة كتاب جديد", "📂 إضافة قسم جديد", "✏️ تعديل بيانات الكتب"])
     
     with tab1:
         if len(st.session_state.orders) == 0:
@@ -224,7 +275,7 @@ elif menu == "🔐 لوحة الإدارة":
                     st.write(f"**الحساب الكلي:** {order['total_price']} جنيه")
 
     with tab2:
-        st.subheader("إضافة كتاب جديد")
+        st.subheader("إضافة كتاب جديد للمتجر")
         with st.form("add_book", clear_on_submit=True):
             t = st.text_input("اسم الكتاب")
             a = st.text_input("اسم المؤلف")
@@ -235,8 +286,8 @@ elif menu == "🔐 لوحة الإدارة":
                 if t and a and img:
                     base64_img = base64.b64encode(img.getvalue()).decode()
                     src = f"data:image/{img.type.split('/')[-1]};base64,{base64_img}"
-                    st.session_state.books.append({"id": f"b{len(st.session_state.books)+1}", "title": t, "author": a, "price": p, "category": c, "image": src})
-                    st.success(f"تم إضافة {t}")
+                    st.session_state.books.append({"id": f"b{len(st.session_state.books)+1}", "title": t, "author": a, "price": p, "category": c, "image": src, "rating": 5.0})
+                    st.success(f"تم إضافة {t} بنجاح!")
                     st.rerun()
 
     with tab3:
@@ -245,7 +296,7 @@ elif menu == "🔐 لوحة الإدارة":
             nc = st.text_input("اسم القسم")
             if st.form_submit_button("حفظ القسم") and nc:
                 st.session_state.categories.append(nc)
-                st.success("تم إضافة القسم الجديد")
+                st.success("تم إضافة القسم الجديد بنجاح!")
                 st.rerun()
 
     with tab4:
@@ -267,6 +318,6 @@ elif menu == "🔐 لوحة الإدارة":
                     st.success("تم تحديث بيانات الكتاب بنجاح بالمتجر!")
                     st.rerun()
 
-# زرار الواتساب
+# زرار الواتساب العائم للتواصل الفوري
 whatsapp_url = "https://wa.me/201149243249?text=أهلاً%20World%20of%20Books%20عايز%20استفسر%20عن%20رواية"
 st.markdown(f'<a href="{whatsapp_url}" class="whatsapp-btn" target="_blank">💬 تواصل واتساب</a>', unsafe_allow_html=True)
