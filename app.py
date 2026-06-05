@@ -338,5 +338,9 @@ elif menu == "🔐 لوحة الإدارة":
     # الميزة الجديدة المطلوبة بالكامل: إدارة صلاحيات حسابات المستخدمين
     with tab5:
         st.subheader("👤 إدارة حسابات المشترين وصلاحيات الدخول")
-        st.markdown("يمكنك من هنا متابعة حسابات العملاء، وحظر أي رقم مزعج أو تعليق حسابه مؤقتاً.")
-       if not st.session_state.logged_in:
+        st.markdown("يمكنك من هنا متابعة حسابات العملاء، وحظر أي رقم مزعج أو تعليق حسابه مؤقتاً.") 
+        # السطر 342 يبدأ من الصفر تماماً بدون أي مسافة قبله
+if not st.session_state.logged_in:
+    st.markdown('<div class="neon-title">World of Books 📚</div>', unsafe_allow_html=True)
+    st.markdown('<div class="neon-subtitle">مرحباً بك! سجل دخولك لتصفح أحدث الروايات الحصرية</div>', unsafe_allow_html=True)
+    # باقي الكود مستمر بمسافة داخلية...
