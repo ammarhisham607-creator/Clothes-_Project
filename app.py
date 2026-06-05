@@ -257,3 +257,201 @@ if not st.session_state.logged_in:
                     st.error("برجاء إدخال اسمك ورقم واتساب صحيح لخدمتك!")
         st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
+# ==================== [ القائمة الجانبية للتنقل ] ====================
+page_options = ["🔐 لوحة الإدارة", "🛒 المتجر الإلكتروني"] if st.session_state.user_role == "admin" else ["🛒 المتجر الإلكتروني"]
+menu = st.sidebar.selectbox("🧭 انتقل إلى صفحة:", page_options)
+
+if st.sidebar.button("🚪 تسجيل الخروج من الحساب"):
+    st.session_state.logged_in = False
+    st.session_state.user_role = "user"
+    st.session_state.cart = []
+    st.rerun()
+
+# ==================== [ صفحة المتجر الإلكتروني للجمهور ] ====================
+if menu == "🛒 المتجر الإلكتروني":
+    st.markdown('<div class="neon-title">World of Books 📚</div>', unsafe_allow_html=True)
+    
+    col_s1, col_s2 = st.columns([2, 1])
+    search_query = col_s1.text_input("🔍 ابحث عن اسم رواية أو مؤلف كتاب:")
+    selected_category = col_s2.selectbox("📂 تصفية الأقسام:", ["الكل"] + st.session_state.categories)
+    
+    filtered_books = [b for b in st.session_state.books if (search_query.lower() in b["title"].lower() or search_query.lower() in b["author"].lower()) and (selected_category == "الكل" or b["category"] == selected_category)]
+
+    if not filtered_books:
+        st.info("لا توجد كتب مطابقة لبحثك حالياً في هذا القسم.")
+    else:
+        cols = st.columns(3)
+        for index, book in enumerate(filtered_books):
+            with cols[index % 3]:
+                st.markdown(f"""
+                <div class="book-card">
+                    <img src="{book['image']}" class="book-img">
+                    <div class="book-title">{book['title']}</div>
+                    <div class="book-author">المؤلف: {book['author']}</div>
+                    <div><span class="book-category">{book['category']}</span></div>
+                    <div class="book-desc">{book.get('description', 'لا يوجد وصف متاح لهذا الكتاب.')}</div>
+                    <div style="color: gold; font-size: 1.1rem; margin-bottom: 5px;">⭐ {book.get('rating', 5.0)}/5.0</div>
+                    <div class="book-price">{book['price']} جنيه</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button("أضف إلى السلة 🛒", key=f"add_{book['id']}"):
+                    st.session_state.cart.append(book)
+                    st.toast(f"تم إضافة {book['title']} إلى سلتك!")
+                
+                with st.expander("💬 آراء القراء والتقييم الحقيقي"):
+                    new_rating = st.slider("قيم الكتاب بالنجوم:", 1.0, 5.0, float(book.get('rating', 5.0)), 0.1, key=f"rate_{book['id']}")
+                    if st.button("حفظ التقييم ⭐", key=f"btn_rate_{book['id']}"):
+                        book['rating'] = new_rating
+                        github_action("books.json", "SAVE", st.session_state.books)
+                        st.toast("تم حفظ تقييمك بنجاح في قاعدة البيانات!")
+                        st.rerun()
+                        
+                    bid = book["id"]
+                    if bid not in st.session_state.comments: st.session_state.comments[bid] = []
+                    for c in st.session_state.comments[bid]:
+                        st.markdown(f"👤 **{c['user']}**: {c['text']}")
+                    
+                    new_comment = st.text_input("اكتب مراجعة وتعليق على الرواية:", key=f"comm_{bid}")
+                    if st.button("نشر المراجعة 🚀", key=f"btn_comm_{bid}") and new_comment.strip():
+                        st.session_state.comments[bid].append({"user": st.session_state.user_info["name"], "text": new_comment.strip()})
+                        github_action("comments.json", "SAVE", st.session_state.comments)
+                        st.rerun()
+
+    # سلة المشتريات التفاعلية وحجز العربون
+    if len(st.session_state.cart) > 0:
+        st.markdown("---")
+        st.markdown('<div class="neon-subtitle" style="text-align: right;">🛒 سلة المشتريات الحالية وعملية الحجز</div>', unsafe_allow_html=True)
+        total_price = sum(item['price'] for item in st.session_state.cart)
+        st.success(f"لديك {len(st.session_state.cart)} كتب في السلة | إجمالي حساب الكتب: {total_price} جنيه مصري")
+        st.markdown('<div class="deposit-warning">⚠️ تنبيه أمان: لإتمام شحن الكتب المحجوزة، يجب دفع (عربون بسيط) عبر الواتساب لتأكيد الحجز الفعلي ومكافحة الحسابات الوهمية!</div>', unsafe_allow_html=True)
+        
+        with st.form("checkout_form"):
+            address = st.text_input("🏠 عنوان الشحن بالتفصيل (المحافظة/المدينة/الشارع):")
+            if st.form_submit_button("تأكيد الطلب وحجز الروايات رسمياً 🚚") and address.strip():
+                order_data = {
+                    "books": [b['title'] for b in st.session_state.cart], 
+                    "total_price": total_price, 
+                    "name": st.session_state.user_info["name"], 
+                    "phone": st.session_state.user_info["whatsapp"], 
+                    "address": address.strip()
+                }
+                st.session_state.orders.append(order_data)
+                github_action("orders.json", "SAVE", st.session_state.orders)
+                st.session_state.cart = []
+                st.success("🎉 تم تسجيل طلبك بنجاح دائم على السيرفر، يرجى الضغط على زر الواتساب أسفله لإرسال العربون وتأكيد الشحن!")
+                st.rerun()
+                # ==================== [ صفحة الإدارة والتحكم الشاملة (الأدمن) ] ====================
+elif menu == "🔐 لوحة الإدارة":
+    st.title("🔐 لوحة تحكم وتوجيه المدير المسؤول")
+    
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📦 الأوردرات", "➕ إضافة كتاب", "📁 إدارة الأقسام", "✏️ تعديل الكتب", "👤 إدارة المستخدمين"])
+    
+    with tab1:
+        st.subheader("📦 طلبات حجز الكتب الواردة المحفوظة على GitHub")
+        if not st.session_state.orders: 
+            st.info("لا توجد طلبات شراء مسجلة حالياً.")
+        for i, order in enumerate(st.session_state.orders):
+            with st.expander(f"أوردر رقم {i+1} - للعميل: {order['name']}"):
+                st.write(f"**📞 واتساب العميل للتواصل:** {order['phone']}")
+                st.write(f"**🏠 عنوان التوصيل:** {order['address']}")
+                st.write(f"**📚 الكتب المطلوبة للطلب:** {', '.join(order['books'])}")
+                st.write(f"**💰 الحساب الإجمالي المستحق:** {order['total_price']} جنيه مصري")
+
+    with tab2:
+        st.subheader("➕ إضافة كتاب أو رواية جديدة للمتجر")
+        with st.form("add_book_form", clear_on_submit=True):
+            col1, col2 = st.columns(2)
+            t = col1.text_input("اسم الكتاب / الرواية:")
+            a = col2.text_input("اسم الكاتب / المؤلف:")
+            cat = col1.selectbox("قسم وتصنيف الكتاب:", st.session_state.categories)
+            p = col2.number_input("سعر الكتاب الحقيقي بالجنيه:", min_value=1, step=5)
+            desc = st.text_area("وصف مختصر وشيق لقصة الرواية:")
+            img = st.file_uploader("صورة الغلاف الحقيقية للكتاب:", type=["png", "jpg", "jpeg"])
+            
+            if st.form_submit_button("إدخال وحفظ الكتاب على جيت هب 🚀") and t and img:
+                base64_img = base64.b64encode(img.getvalue()).decode()
+                src = f"data:image/{img.type.split('/')[-1]};base64,{base64_img}"
+                st.session_state.books.append({
+                    "id": f"b{len(st.session_state.books)+1}", 
+                    "title": t.strip(), 
+                    "author": a.strip(), 
+                    "price": p, 
+                    "category": cat, 
+                    "description": desc.strip(), 
+                    "image": src, 
+                    "rating": 5.0
+                })
+                github_action("books.json", "SAVE", st.session_state.books)
+                st.success("تم رفع الرواية وتحديث قاعدة بيانات GitHub بنجاح وأمان دائم!")
+                st.rerun()
+
+    with tab3:
+        st.subheader("📁 إضافة وإدارة الأقسام المعتمدة")
+        new_cat = st.text_input("اكتب اسم القسم الجديد المراد تعميمه:")
+        if st.button("تأكيد حفظ القسم الجديد 📁") and new_cat.strip():
+            if new_cat.strip() not in st.session_state.categories:
+                st.session_state.categories.append(new_cat.strip())
+                github_action("categories.json", "SAVE", st.session_state.categories)
+                st.success("تم حفظ وتعميم القسم الجديد في الفلاتر!")
+                st.rerun()
+        st.write("الأقسام الحالية المعتمدة لحماية النظام من العشوائية:", ", ".join(st.session_state.categories))
+
+    with tab4:
+        st.subheader("✏️ تعديل بيانات وأسعار وغلاف الكتب الحالية")
+        selected_book_title = st.selectbox("اختر الرواية التي تريد تعديلها حالياً:", [b["title"] for b in st.session_state.books])
+        book_to_edit = next((b for b in st.session_state.books if b["title"] == selected_book_title), None)
+        
+        if book_to_edit:
+            with st.form("edit_book_form_secure"):
+                new_t = st.text_input("تعديل الاسم الرئيسي للرواية:", value=book_to_edit["title"])
+                new_a = st.text_input("تعديل اسم المؤلف:", value=book_to_edit["author"])
+                new_cat = st.selectbox("تعديل القسم:", st.session_state.categories, index=st.session_state.categories.index(book_to_edit["category"]) if book_to_edit["category"] in st.session_state.categories else 0)
+                new_desc = st.text_area("تعديل الوصف والقصة التخيلية:", value=book_to_edit.get("description", ""))
+                new_p = st.number_input("تعديل سعر البيع بالجنيه:", min_value=1, value=int(book_to_edit["price"]))
+                
+                st.write("🖼️ غلاف الرواية الحالي في المتجر:")
+                st.image(book_to_edit["image"], width=130)
+                new_img = st.file_uploader("رفع غلاف وصورة جديدة كلياً (اتركه فارغاً للاحتفاظ بالصورة الحالية):", type=["png", "jpg", "jpeg"])
+                
+                if st.form_submit_button("تحديث البيانات وحفظ التغييرات نهائياً 💾"):
+                    book_to_edit["title"] = new_t.strip()
+                    book_to_edit["author"] = new_a.strip()
+                    book_to_edit["category"] = new_cat
+                    book_to_edit["description"] = new_desc.strip()
+                    book_to_edit["price"] = new_p
+                    if new_img:
+                        base64_img = base64.b64encode(new_img.getvalue()).decode()
+                        book_to_edit["image"] = f"data:image/{new_img.type.split('/')[-1]};base64,{base64_img}"
+                    
+                    github_action("books.json", "SAVE", st.session_state.books)
+                    st.success("تم تحديث البيانات بالكامل وحفظها دافورياً على GitHub!")
+                    st.rerun()
+
+    with tab5:
+        st.subheader("👤 إدارة حسابات المشترين وصلاحيات الحظر والتعليق")
+        st.markdown("تحكم كامل بحسابات العملاء لمكافحة الأرقام المزعجة والطلبات الوهمية:")
+        
+        if not st.session_state.users:
+            st.info("لم يسجل أي عميل أو مستخدم في النظام حتى الآن.")
+        else:
+            for idx, user in enumerate(st.session_state.users):
+                with st.container():
+                    col_u1, col_u2, col_u3 = st.columns([3, 2, 1])
+                    col_u1.write(f"👤 **الاسم:** {user['name']} | 📞 **واتساب:** `{user['whatsapp']}`")
+                    
+                    status_options = ["نشط", "معلق", "محظور"]
+                    current_idx = status_options.index(user.get("status", "نشط"))
+                    
+                    new_status = col_u2.selectbox(f"تعديل صلاحية {user['name']}:", status_options, index=current_idx, key=f"status_select_{idx}")
+                    
+                    if col_u3.button("حفظ التعديل 💾", key=f"save_user_btn_{idx}"):
+                        user["status"] = new_status
+                        github_action("users.json", "SAVE", st.session_state.users)
+                        st.success(f"تم تغيير حالة {user['name']} إلى ({new_status}) بنجاح!")
+                        st.rerun()
+                st.markdown("---")
+
+# زر الواتساب العائم في زاوية الشاشة للتواصل والدعم
+whatsapp_url = "https://wa.me/201149243249?text=مرحباً%20بإدارة%20مكتبة%20World%20of%20Books%20أود%20تأكيد%20حجز%20الكتب%20ودفع%20العربون"
+st.markdown(f'<a href="{whatsapp_url}" class="whatsapp-btn" target="_blank">💬 تواصل وتأكيد دفع العربون</a>', unsafe_allow_html=True)
