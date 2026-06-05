@@ -3,10 +3,10 @@ import base64
 import requests
 import json
 
-# 1. إعدادات الصفحة العامة
+# 1. إعدادات الصفحة العامة للمتجر
 st.set_page_config(page_title="World of Books", page_icon="📚", layout="wide")
 
-# 2. كود الـ CSS النيون المطور (كامل ومحافظ عليه بنسبة 100%)
+# 2. تصميم النيون الاحترافي مع دعم كامل للغة العربية والمحاذاة الصحيحة (CSS)
 neon_style = """
 <style>
 .stApp {
@@ -42,14 +42,14 @@ neon_style = """
     background: rgba(25, 25, 40, 0.85); border: 2px solid #ff007f; border-radius: 15px; 
     padding: 20px; text-align: center; box-shadow: 0 0 15px rgba(255, 0, 127, 0.2); 
     display: flex; flex-direction: column; justify-content: space-between;
-    height: 100%; margin-bottom: 20px;
+    height: 620px; margin-bottom: 20px;
 }
-.book-img { width: 100%; height: 280px; object-fit: cover; border-radius: 10px; border: 1px solid #ff007f; margin-bottom: 15px; }
-.book-title { color: #fff; font-size: 1.4rem; font-weight: bold; margin: 5px 0; }
-.book-author { color: #00f3ff; font-size: 1.05rem; margin-bottom: 5px; }
-.book-category { color: #ff007f; font-size: 0.9rem; font-weight: bold; margin-bottom: 5px; border: 1px solid #ff007f; display: inline-block; padding: 2px 8px; border-radius: 10px;}
-.book-desc { color: #a0a0b0; font-size: 0.9rem; margin-bottom: 10px; line-height: 1.4; }
-.book-price { color: #39ff14; font-size: 1.4rem; font-weight: bold; text-shadow: 0 0 5px #39ff14; margin-top: 10px; }
+.book-img { width: 100%; height: 260px; object-fit: cover; border-radius: 10px; border: 1px solid #ff007f; margin-bottom: 15px; }
+.book-title { color: #fff; font-size: 1.3rem; font-weight: bold; margin: 5px 0; min-height: 40px; display: flex; align-items: center; justify-content: center; }
+.book-author { color: #00f3ff; font-size: 1rem; margin-bottom: 5px; }
+.book-category { color: #ff007f; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; border: 1px solid #ff007f; display: inline-block; padding: 2px 8px; border-radius: 10px;}
+.book-desc { color: #a0a0b0; font-size: 0.85rem; margin-bottom: 10px; line-height: 1.4; min-height: 60px; overflow: hidden; }
+.book-price { color: #39ff14; font-size: 1.3rem; font-weight: bold; text-shadow: 0 0 5px #39ff14; margin-top: auto; }
 div.stButton > button { background-color: transparent !important; color: #00f3ff !important; border: 2px solid #00f3ff !important; border-radius: 8px !important; font-weight: bold !important; width: 100%; margin-top: 5px;}
 div.stButton > button:hover { background-color: #00f3ff !important; color: #121212 !important; box-shadow: 0 0 25px #00f3ff !important; }
 .whatsapp-btn { position: fixed; bottom: 20px; left: 20px; background-color: #25d366; color: white !important; padding: 15px 25px; border-radius: 50px; font-weight: bold; text-decoration: none; box-shadow: 0 0 15px #25d366; z-index: 9999; display: flex; align-items: center; gap: 10px; transition: transform 0.3s; }
@@ -58,7 +58,7 @@ div.stButton > button:hover { background-color: #00f3ff !important; color: #1212
 """
 st.markdown(neon_style, unsafe_allow_html=True)
 
-# دالة برمجية موحدة وذكية للتعامل مع ملفات جيت هاب تمنع الباجات تماماً
+# 3. الدالة البرمجية الذكية لربط السيرفر بـ GitHub ومنع كراش الموقع
 def github_action(path, action="LOAD", data_to_save=None):
     try:
         if "GITHUB_TOKEN" in st.secrets and "GITHUB_REPO" in st.secrets:
@@ -86,261 +86,68 @@ def github_action(path, action="LOAD", data_to_save=None):
         pass
     return [] if action == "LOAD" else False
 
-# 3. تحميل وإعداد قواعد البيانات الثابتة من جيت هاب مع وجود قيم افتراضية حماية من السقوط
-default_books = [
-    {"id": "b1", "title": "الفيل الأزرق", "author": "أحمد مراد", "price": 150, "category": "رعب وغموض", "description": "رواية تشويق وإثارة نفسية عن طبيب نفسي يواجه قضايا معقدة.", "image": "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400", "rating": 4.8},
-    {"id": "b2", "title": "أرض زيكولا", "author": "عمرو عبد الحميد", "price": 130, "category": "روايات فانتازيا", "description": "خيال يمزج بين الواقع وعالم يتعامل بوحدات الذكاء بدلاً من المال.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.7}
+# 4. الأقسام الستة الكبرى المعتمدة لمنع العشوائية والسويقة
+default_cats = [
+    "روايات رعب وغموض", 
+    "روايات فانتازيا وتشويق", 
+    "تنمية ذاتية وعلم نفس", 
+    "روايات أدبية وكلاسيكيات", 
+    "كتب إسلامية ودينية", 
+    "قصص بوليسية ومغامرات"
 ]
-default_cats = ["روايات فانتازيا", "رعب وغموض", "أدب عالمي", "تنمية ذاتية"]
 
-if "books" not in st.session_state:
-    loaded_books = github_action("books.json", "LOAD")
-    st.session_state.books = loaded_books if loaded_books else default_books
+# 5. قاعدة البيانات الضخمة المنظمة للكتب المطلوبة بالكامل
+default_books = [
+    # --- رعب وغموض ---
+    {"id": "h1", "title": "خوف", "author": "أسامة المسلم", "price": 140, "category": "روايات رعب وغموض", "description": "الولوج إلى العالم الآخر وكشف الأسرار المخفية بين عالمنا وعالم الجان.", "image": "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400", "rating": 4.9},
+    {"id": "h2", "title": "خوف 2", "author": "أسامة المسلم", "price": 150, "category": "روايات رعب وغموض", "description": "تكملة الصراع النفسي والفكري في عوالم الغموض والإثارة والجان.", "image": "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400", "rating": 4.8},
+    {"id": "h3", "title": "خوف 3", "author": "أسامة المسلم", "price": 160, "category": "روايات رعب وغموض", "description": "الجزء الثالث الحاسم من الملحمة النفسية الأكثر مبيعاً في الوطن العربي.", "image": "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400", "rating": 4.7},
+    {"id": "h4", "title": "نوح المذبوح", "author": "حسن الجندي", "price": 130, "category": "روايات رعب وغموض", "description": "رواية رعب شرقي مخيفة تدور حول اللعنات القديمة والطقوس المنسية.", "image": "https://images.unsplash.com/photo-1514849963640-9cc74b2a826f?q=80&w=400", "rating": 4.6},
+    {"id": "h5", "title": "نادر فوده 1 (قبل البداية)", "author": "أحمد يونس", "price": 110, "category": "روايات رعب وغموض", "description": "المغامرة الأولى للصحفي نادر فودة مع عوالم ما وراء الطبيعة والمقابر.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.7},
+    {"id": "h6", "title": "نادر فوده 2 (كسر الصنم)", "author": "أحمد يونس", "price": 115, "category": "روايات رعب وغموض", "description": "ملفات كسر الصنم وعودة الكيانات المظلمة لملاحقة نادر فودة وعائلته.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.6},
+    {"id": "h7", "title": "نادر فوده 3 (الخوف)", "author": "أحمد يونس", "price": 120, "category": "روايات رعب وغموض", "description": "رحلة جديدة تحبس الأنفاس داخل سراديب الموت والجن المتربص بالبشر.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.8},
+    {"id": "h8", "title": "نادر فوده 4 (عمارة الفزع)", "author": "أحمد يونس", "price": 125, "category": "روايات رعب وغموض", "description": "صراعات غامضة ومواجهة الكيانات السبعة في عمارة سكنية ملعونة.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.5},
+    {"id": "h9", "title": "نادر فوده 5 (العين الثالثة)", "author": "أحمد يونس", "price": 130, "category": "روايات رعب وغموض", "description": "العين الثالثة وكشف المستور من القضايا الجنائية ذات الطابع الغيبي.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.7},
+    {"id": "h10", "title": "نادر فوده 6 (الرصد)", "author": "أحمد يونس", "price": 135, "category": "روايات رعب وغموض", "description": "رواية الرعب والتشويق المستمر مع عالم الرصد الفرعوني وحراس المقابر.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.6},
+    {"id": "h11", "title": "نادر فوده 7 (الجاثوم)", "author": "أحمد يونس", "price": 140, "category": "روايات رعب وغموض", "description": "قضايا وأسرار مثيرة من واقع ملفات ما وراء الطبيعة المخفية والجاثوم.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.8},
+    {"id": "h12", "title": "نادر فوده 8 (الخادمة)", "author": "أحمد يونس", "price": 145, "category": "روايات رعب وغموض", "description": "قبل المعركة الأخيرة، مغامرة تكشف أوراقاً ظلت غامضة لسنوات في القرية.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.7},
+    {"id": "h13", "title": "نادر فوده 9 (السيد)", "author": "أحمد يونس", "price": 150, "category": "روايات رعب وغموض", "description": "الجزء التاسع المنتظر من سلسلة الرعب الإذاعية الشهيرة خادمة الجن.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.9},
+    {"id": "h14", "title": "سر الغرفة 207", "author": "أحمد خالد توفيق", "price": 110, "category": "روايات رعب وغموض", "description": "أحداث مرعبة وغير طبيعية تحدث داخل غرفة فندق يرفض مغادرتها الأحياء بسلام.", "image": "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400", "rating": 4.9},
+    {"id": "h15", "title": "الجزار", "author": "حسن الجندي", "price": 145, "category": "روايات رعب وغموض", "description": "رواية رعب وجريمة سيكولوجية معقدة عن الانتقام والعدالة والدم.", "image": "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400", "rating": 4.8},
+    {"id": "h16", "title": "لوكاندة في بير الوطاويط", "author": "أحمد مراد", "price": 160, "category": "روايات رعب وغموض", "description": "جريمة غموض تاريخية مشوقة في القاهرة القديمة تكشفها يوميات ومقابر سريّة.", "image": "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400", "rating": 4.7},
+    {"id": "h17", "title": "ابتسم فأنت ميت", "author": "حسن الجندي", "price": 120, "category": "روايات رعب وغموض", "description": "شقة سكنية بوسط القاهرة تخفي سراً مرعباً لكل من يحاول السكن بها.", "image": "https://images.unsplash.com/photo-1514849963640-9cc74b2a826f?q=80&w=400", "rating": 4.6},
+    {"id": "h18", "title": "منزل أبو خطوة", "author": "حسن الجندي", "price": 125, "category": "روايات رعب وغموض", "description": "إثارة وغموض في بيت ريفي قديم تحوم حوله الشبهات واللعنات المتوارثة.", "image": "https://images.unsplash.com/photo-1514849963640-9cc74b2a826f?q=80&w=400", "rating": 4.5},
+    {"id": "h19", "title": "حارة الجزار", "author": "عمرو المنوفي", "price": 115, "category": "روايات رعب وغموض", "description": "غموض يكتنف سلسلة جرائم قتل متتالية مرعبة في حي شعبي هادئ.", "image": "https://images.unsplash.com/photo-1514849963640-9cc74b2a826f?q=80&w=400", "rating": 4.4},
+    {"id": "h20", "title": "جثة لذيذة", "author": "أحمد العايدي", "price": 110, "category": "روايات رعب وغموض", "description": "رواية ساخرة سوداء تمزج بين الرعب النفسي والتشويق المثير.", "image": "https://images.unsplash.com/photo-1514849963640-9cc74b2a826f?q=80&w=400", "rating": 4.3},
+    {"id": "h21", "title": "إنهم يأتون ليلاً", "author": "تامر إبراهيم", "price": 130, "category": "روايات رعب وغموض", "description": "مجموعة قصصية مرعبة تحبس الأنفاس تدور أحداثها بالكامل في ظلام الليل.", "image": "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400", "rating": 4.6},
+    {"id": "h22", "title": "الهلكوت", "author": "محمد عصمت", "price": 120, "category": "روايات رعب وغموض", "description": "رواية رعب وإثارة لاهثة حول طقوس استدعاء قديمة تقلب الأمور رأسا على عقب.", "image": "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400", "rating": 4.5},
+    {"id": "h23", "title": "يحدث ليلاً في غرفة مظلمة", "author": "مروى جوهر", "price": 115, "category": "روايات رعب وغموض", "description": "أسرار غامضة وتحقيقات مثيرة في غرف مغلقة يكتنفها السحر والشعوذة.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.4},
+    {"id": "h24", "title": "في حضرة الجان", "author": "حسن الجندي", "price": 140, "category": "روايات رعب وغموض", "description": "مواجهات مباشرة وحكايات مرعبة من كتابات المخطوطات القديمة وعالم الجان.", "image": "https://images.unsplash.com/photo-1514849963640-9cc74b2a826f?q=80&w=400", "rating": 4.7},
+    {"id": "h25", "title": "سرداب قصر البارون", "author": "عمرو المنوفي", "price": 125, "category": "روايات رعب وغموض", "description": "رواية رعب تعتمد على الأساطير المصرية حول قصر البارون الشهير وسراديبه الكامنة.", "image": "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400", "rating": 4.6},
+    {"id": "h26", "title": "ليلة ظهور القرين", "author": "محمد رجب", "price": 120, "category": "روايات رعب وغموض", "description": "عندما يواجه الإنسان قرينه في ليلة شتوية ممطرة، صراع البقاء المرعب.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.3},
 
-if "categories" not in st.session_state:
-    loaded_cats = github_action("categories.json", "LOAD")
-    st.session_state.categories = loaded_cats if loaded_cats else default_cats
+    # --- فانتازيا وتشويق ---
+    {"id": "f1", "title": "أرض زيكولا", "author": "عمرو عبد الحميد", "price": 130, "category": "روايات فانتازيا وتشويق", "description": "عالم غريب يتعامل بوحدات الذكاء بدلاً من النقود، والفقير يُذبح!", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.9},
+    {"id": "f2", "title": "أمواج أكما", "author": "عمرو عبد الحميد", "price": 140, "category": "روايات فانتازيا وتشويق", "description": "الجزء الثالث من ملحمة قواعد جارتين وصراع العقول والحرية المنتظرة.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.8},
+    {"id": "f3", "title": "دقات الشامو", "author": "عمرو عبد الحميد", "price": 135, "category": "روايات فانتازيا وتشويق", "description": "قواعد جارتين تشتعل بالصراعات والأسرار المخفية للنسل الجديد المتمرد.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.7},
+    {"id": "f4", "title": "قواعد جارتين", "author": "عمرو عبد الحميد", "price": 130, "category": "روايات فانتازيا وتشويق", "description": "بداية الثلاثية الأسطورية الخيالية عن مجتمع تحكمه قوانين قاسية وعجيبة.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.8},
+    {"id": "f5", "title": "إيكادولي", "author": "حنان لاشين", "price": 140, "category": "روايات فانتازيا وتشويق", "description": "سفر في مملكة البلاغة، حيث تحلق الكلمات وتجسد الروايات قيم النبل والخير.", "image": "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=400", "rating": 4.9},
+    {"id": "f6", "title": "جومانه", "author": "حنان لاشين", "price": 145, "category": "روايات فانتازيا وتشويق", "description": "رحلة ملحمية جديدة داخل مملكة البلاغة بأسلوب ساحر ومميز يجذب العقول.", "image": "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=400", "rating": 4.7},
+    {"id": "f7", "title": "ياجوج وماجوج", "author": "عمرو المنوفي", "price": 120, "category": "روايات فانتازيا وتشويق", "description": "فانتازيا تاريخية مثيرة مستوحاة من الأساطير والقصص الدينية القديمة.", "image": "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=400", "rating": 4.5},
+    {"id": "f8", "title": "يوتوبيا", "author": "أحمد خالد توفيق", "price": 100, "category": "روايات فانتازيا وتشويق", "description": "رواية ديستوبيا مستقبلية مرعبة ومثيرة عن انقسام المجتمع لطبقتين متناقضتين.", "image": "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400", "rating": 4.8},
+    {"id": "f9", "title": "لارسيا", "author": "أحمد آل حمدان", "price": 150, "category": "روايات فانتازيا وتشويق", "description": "صراعات العروش الخيالية والسحر الأسود في ملحمة روائية مبهرة.", "image": "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=400", "rating": 4.7},
+    {"id": "f10", "title": "المرتد", "author": "حسن الجندي", "price": 135, "category": "روايات فانتازيا وتشويق", "description": "الجزء الثاني من رواية مخطوطة ابن إسحاق، إثارة وتداخل عوالم خيالية.", "image": "https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?q=80&w=400", "rating": 4.8},
+    {"id": "f11", "title": "أرسس", "author": "أحمد آل حمدان", "price": 140, "category": "روايات فانتازيا وتشويق", "description": "رواية تفتح أبواب الجحيم والخيال العلمي بأسلوب مشوق ومثير للشباب.", "image": "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=400", "rating": 4.6},
+    {"id": "f12", "title": "أرسس 2", "author": "أحمد آل حمدان", "price": 150, "category": "روايات فانتازيا وتشويق", "description": "تكملة قصة الكائن الأخير والمواجهة الكبرى لحماية الكوكب الخيالي.", "image": "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=400", "rating": 4.7},
 
-if "orders" not in st.session_state:
-    loaded_orders = github_action("orders.json", "LOAD")
-    st.session_state.orders = loaded_orders if loaded_orders else []
-
-if "comments" not in st.session_state:
-    loaded_comments = github_action("comments.json", "LOAD")
-    st.session_state.comments = loaded_comments if isinstance(loaded_comments, dict) else {}
-
-if "users" not in st.session_state:
-    loaded_users = github_action("users.json", "LOAD")
-    st.session_state.users = loaded_users if loaded_users else []
-
-if "logged_in" not in st.session_state: st.session_state.logged_in = False
-if "user_role" not in st.session_state: st.session_state.user_role = "user"
-if "user_info" not in st.session_state: st.session_state.user_info = {"name": "", "whatsapp": ""}
-if "cart" not in st.session_state: st.session_state.cart = []
-
-# ==================== [ فحص حالة الحساب الحالي لمنع المحظورين فورا ] ====================
-if st.session_state.logged_in and st.session_state.user_role == "user":
-    # إعادة فحص حالة المستخدم من القائمة المحدثة
-    current_user_check = next((u for u in st.session_state.users if u["whatsapp"] == st.session_state.user_info["whatsapp"]), None)
-    if current_user_check:
-        if current_user_check["status"] == "محظور":
-            st.error("🚫 عذراً، لقد تم حظر حسابك من دخول المتجر بواسطة الإدارة.")
-            st.session_state.logged_in = False
-            st.stop()
-        elif current_user_check["status"] == "معلق":
-            st.warning("⏳ حسابك معلق مؤقتاً مراجعة من قبل الإدارة، تواصل معنا لتفعيله.")
-            st.session_state.logged_in = False
-            st.stop()
-
-# ==================== [ شاشة تسجيل الدخول المخفية والذكية ] ====================
-if not st.session_state.logged_in:
-    st.markdown('<div class="neon-title">World of Books 📚</div>', unsafe_allow_html=True)
-    st.markdown('<div class="neon-subtitle">مرحباً بك! سجل دخولك لتصفح أحدث الروايات الحصرية</div>', unsafe_allow_html=True)
-    
-    col_login, _ = st.columns([2, 1])
-    with col_login:
-        st.markdown('<div class="login-box">', unsafe_allow_html=True)
-        reg_name = st.text_input("👤 اسمك بالكامل:")
-        
-        if reg_name.strip() == "admin_login":
-            admin_pass = st.text_input("🔑 كلمة مرور الأدمن السري:", type="password")
-            if st.button("دخول الإدارة 🔐"):
-                if admin_pass == "admin123":
-                    st.session_state.user_role = "admin"
-                    st.session_state.logged_in = True
-                    st.rerun()
-                else: st.error("الباسورد خطأ!")
-        else:
-            reg_phone = st.text_input("📞 رقم الواتساب الخاص بك:")
-            if st.button("دخول المتجر 🛒"):
-                if reg_name.strip() and reg_phone.strip():
-                    # فحص الحساب في جيت هب
-                    user_match = next((u for u in st.session_state.users if u["whatsapp"] == reg_phone.strip()), None)
-                    
-                    if user_match:
-                        if user_match["status"] == "محظور":
-                            st.error("🚫 هذا الحساب محظور تماماً من دخول المتجر!")
-                        elif user_match["status"] == "معلق":
-                            st.warning("⏳ حسابك معلق حالياً، تواصل مع الدعم الفني.")
-                        else:
-                            st.session_state.user_info = {"name": user_match["name"], "whatsapp": user_match["whatsapp"]}
-                            st.session_state.user_role = "user"
-                            st.session_state.logged_in = True
-                            st.rerun()
-                    else:
-                        # مستخدم جديد تماماً
-                        new_u = {"name": reg_name.strip(), "whatsapp": reg_phone.strip(), "status": "نشط"}
-                        st.session_state.users.append(new_u)
-                        github_action("users.json", "SAVE", st.session_state.users)
-                        
-                        st.session_state.user_info = {"name": reg_name.strip(), "whatsapp": reg_phone.strip()}
-                        st.session_state.user_role = "user"
-                        st.session_state.logged_in = True
-                        st.rerun()
-                else: st.error("برجاء إدخال البيانات كاملة!")
-        st.markdown('</div>', unsafe_allow_html=True)
-    st.stop()
-
-# ==================== [ القائمة الجانبية للتنقل ] ====================
-page_options = ["🔐 لوحة الإدارة", "🛒 المتجر الإلكتروني"] if st.session_state.user_role == "admin" else ["🛒 المتجر الإلكتروني"]
-menu = st.sidebar.selectbox("🧭 انتقل إلى:", page_options)
-
-if st.sidebar.button("🚪 تسجيل الخروج"):
-    st.session_state.logged_in = False
-    st.session_state.user_role = "user"
-    st.session_state.cart = []
-    st.rerun()
-
-# ==================== [ صفحة المتجر الإلكتروني ] ====================
-if menu == "🛒 المتجر الإلكتروني":
-    st.markdown('<div class="neon-title">World of Books 📚</div>', unsafe_allow_html=True)
-    
-    search_query = st.text_input("🔍 ابحث عن اسم رواية أو مؤلف:")
-    selected_category = st.selectbox("📂 تصفية حسب القسم:", ["الكل"] + st.session_state.categories)
-    
-    filtered_books = [b for b in st.session_state.books if (search_query.lower() in b["title"].lower() or search_query.lower() in b["author"].lower()) and (selected_category == "الكل" or b["category"] == selected_category)]
-
-    cols = st.columns(3)
-    for index, book in enumerate(filtered_books):
-        with cols[index % 3]:
-            st.markdown(f"""
-            <div class="book-card">
-                <img src="{book['image']}" class="book-img">
-                <div class="book-title">{book['title']}</div>
-                <div class="book-author">تأليف: {book['author']}</div>
-                <div><span class="book-category">{book['category']}</span></div>
-                <div class="book-desc">{book.get('description', 'لا يوجد وصف متاح')}</div>
-                <div style="color: gold; font-size: 1.1rem; margin-bottom: 5px;">⭐ {book.get('rating', 5.0)}/5.0</div>
-                <div class="book-price">{book['price']} جنيه</div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            if st.button("أضف للسلة 🛒", key=f"add_{book['id']}"):
-                st.session_state.cart.append(book)
-                st.toast(f"تم إضافة {book['title']}!")
-            
-            # التقييم والتعليقات المرجعة بالكامل
-            with st.expander("💬 التقييمات وآراء القراء"):
-                new_rating = st.slider("تقييمك:", 1.0, 5.0, float(book.get('rating', 5.0)), 0.1, key=f"rate_{book['id']}")
-                if st.button("حفظ التقييم ⭐", key=f"btn_rate_{book['id']}"):
-                    book['rating'] = new_rating
-                    github_action("books.json", "SAVE", st.session_state.books)
-                    st.toast("تم حفظ تقييمك بنجاح في قاعدة البيانات!")
-                    st.rerun()
-                    
-                bid = book["id"]
-                if bid not in st.session_state.comments: st.session_state.comments[bid] = []
-                for c in st.session_state.comments[bid]:
-                    st.markdown(f"👤 **{c['user']}**: {c['text']}")
-                
-                new_comment = st.text_input("اكتب تعليقاً محفزاً للرواية:", key=f"comm_{bid}")
-                if st.button("نشر التعليق 🚀", key=f"btn_comm_{bid}") and new_comment:
-                    st.session_state.comments[bid].append({"user": st.session_state.user_info["name"], "text": new_comment})
-                    github_action("comments.json", "SAVE", st.session_state.comments)
-                    st.rerun()
-
-    # السلة والدفع بالعربون
-    if len(st.session_state.cart) > 0:
-        st.markdown("---")
-        st.markdown('<div class="neon-subtitle" style="text-align: right;">🛒 سلة المشتريات الحالية</div>', unsafe_allow_html=True)
-        total_price = sum(item['price'] for item in st.session_state.cart)
-        st.success(f"لديك {len(st.session_state.cart)} كتب في السلة | إجمالي الحساب: {total_price} جنيه")
-        st.markdown('<div class="deposit-warning">⚠️ تنبيه هام: لإتمام شحن الكتب المحجوزة، يجب دفع (عربون) عبر الواتساب لتأكيد الحجز!</div>', unsafe_allow_html=True)
-        
-        with st.form("checkout_form"):
-            address = st.text_input("🏠 عنوان الشحن بالتفصيل المُمِل:")
-            if st.form_submit_button("تأكيد الطلب وحجز الكتب 🚚") and address.strip():
-                order_data = {"books": [b['title'] for b in st.session_state.cart], "total_price": total_price, "name": st.session_state.user_info["name"], "phone": st.session_state.user_info["whatsapp"], "address": address}
-                st.session_state.orders.append(order_data)
-                github_action("orders.json", "SAVE", st.session_state.orders)
-                st.session_state.cart = []
-                st.success("🎉 تم تسجيل طلبك على السيستم وحفظه بنجاح دائم!")
-                st.rerun()
-
-# ==================== [ صفحة الإدارة والتحكم الشاملة ] ====================
-elif menu == "🔐 لوحة الإدارة":
-    st.title("🔐 لوحة تحكم المدير المسؤول")
-    
-    # تم الحفاظ على الألسنة الأربعة القديمة بالكامل وضبط التخزين الدائم، وتم إضافة لسان خامس للمستخدمين
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📦 الأوردرات", "➕ إضافة كتاب", "📁 إدارة الأقسام", "✏️ تعديل الكتب", "👤 إدارة المستخدمين"])
-    
-    with tab1:
-        st.subheader("📦 الطلبات الواردة من الموقع المحفوظة على GitHub")
-        if not st.session_state.orders: st.info("لا توجد طلبات حالياً.")
-        for i, order in enumerate(st.session_state.orders):
-            with st.expander(f"أوردر رقم {i+1} - للعميل: {order['name']}"):
-                st.write(f"**📞 واتساب العميل:** {order['phone']}")
-                st.write(f"**🏠 العنوان:** {order['address']}")
-                st.write(f"**📚 الكتب المحجوزة:** {', '.join(order['books'])}")
-                st.write(f"**💰 الحساب الإجمالي:** {order['total_price']} جنيه")
-
-    with tab2:
-        st.subheader("➕ إضافة كتاب جديد للمتجر وقاعدة جيت هب")
-        with st.form("add_book_form", clear_on_submit=True):
-            col1, col2 = st.columns(2)
-            t = col1.text_input("اسم الكتاب")
-            a = col2.text_input("اسم المؤلف")
-            cat = col1.selectbox("القسم المناسب", st.session_state.categories)
-            p = col2.number_input("السعر بالجنيه", min_value=1, step=5)
-            desc = st.text_area("وصف وقصة الكتاب:")
-            img = st.file_uploader("صورة غلاف الكتاب الحقيقية", type=["png", "jpg", "jpeg"])
-            
-            if st.form_submit_button("إدخال وحفظ الكتاب 🚀") and t and img:
-                base64_img = base64.b64encode(img.getvalue()).decode()
-                src = f"data:image/{img.type.split('/')[-1]};base64,{base64_img}"
-                st.session_state.books.append({"id": f"b{len(st.session_state.books)+1}", "title": t, "author": a, "price": p, "category": cat, "description": desc, "image": src, "rating": 5.0})
-                github_action("books.json", "SAVE", st.session_state.books)
-                st.success("تم رفع الكتاب وحفظه بنجاح دائم على جيت هب!")
-                st.rerun()
-
-    with tab3:
-        st.subheader("📁 إدارة وأقسام المتجر")
-        new_cat = st.text_input("اكتب اسم القسم الجديد:")
-        if st.button("تأكيد إضافة القسم 📁") and new_cat.strip():
-            if new_cat.strip() not in st.session_state.categories:
-                st.session_state.categories.append(new_cat.strip())
-                github_action("categories.json", "SAVE", st.session_state.categories)
-                st.success("تم حفظ وتعميم القسم الجديد!")
-                st.rerun()
-        st.write("الأقسام الحالية المعتمدة في المتجر:", ", ".join(st.session_state.categories))
-
-    with tab4:
-        st.subheader("✏️ تعديل بيانات وصور الكتب الحالية")
-        selected_book_title = st.selectbox("اختر الكتاب المراد تعديله:", [b["title"] for b in st.session_state.books])
-        book_to_edit = next((b for b in st.session_state.books if b["title"] == selected_book_title), None)
-        
-        if book_to_edit:
-            with st.form("edit_book_form_secure"):
-                new_t = st.text_input("تعديل الاسم", value=book_to_edit["title"])
-                new_a = st.text_input("تعديل المؤلف", value=book_to_edit["author"])
-                new_cat = st.selectbox("تعديل القسم", st.session_state.categories, index=st.session_state.categories.index(book_to_edit["category"]) if book_to_edit["category"] in st.session_state.categories else 0)
-                new_desc = st.text_area("تعديل الوصف والقصة", value=book_to_edit.get("description", ""))
-                new_p = st.number_input("تعديل السعر", min_value=1, value=int(book_to_edit["price"]))
-                
-                st.write("🖼️ غلاف الكتاب الحالي:")
-                st.image(book_to_edit["image"], width=130)
-                new_img = st.file_uploader("رفع غلاف وصورة جديدة كلياً (اتركه فارغاً للإبقاء على الصورة الحالية)", type=["png", "jpg", "jpeg"])
-                
-                if st.form_submit_button("حفظ وتحديث البيانات على السيرفر 💾"):
-                    book_to_edit["title"] = new_t
-                    book_to_edit["author"] = new_a
-                    book_to_edit["category"] = new_cat
-                    book_to_edit["description"] = new_desc
-                    book_to_edit["price"] = new_p
-                    if new_img:
-                        base64_img = base64.b64encode(new_img.getvalue()).decode()
-                        book_to_edit["image"] = f"data:image/{new_img.type.split('/')[-1]};base64,{base64_img}"
-                    
-                    github_action("books.json", "SAVE", st.session_state.books)
-                    st.success("تم تحديث وحفظ بيانات وصورة الرواية بنجاح!")
-                    st.rerun()
-
-    # الميزة الجديدة المطلوبة بالكامل: إدارة صلاحيات حسابات المستخدمين
-    with tab5:
-        st.subheader("👤 إدارة حسابات المشترين وصلاحيات الدخول")
-        st.markdown("يمكنك من هنا متابعة حسابات العملاء، وحظر أي رقم مزعج أو تعليق حسابه مؤقتاً.") 
-        # السطر 342 يبدأ من الصفر تماماً بدون أي مسافة قبله
-if not st.session_state.logged_in:
-    st.markdown('<div class="neon-title">World of Books 📚</div>', unsafe_allow_html=True)
-    st.markdown('<div class="neon-subtitle">مرحباً بك! سجل دخولك لتصفح أحدث الروايات الحصرية</div>', unsafe_allow_html=True)
-    # باقي الكود مستمر بمسافة داخلية...
+    # --- تنمية ذاتية وعلم نفس ---
+    {"id": "s1", "title": "نظرية الفستق التاني", "author": "فهد عامر الأحمدي", "price": 160, "category": "تنمية ذاتية وعلم نفس", "description": "استكمال لمقالات تطوير الذات وطرق التفكير الإيجابي وتعديل السلوك اليومي.", "image": "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=400", "rating": 4.8},
+    {"id": "s2", "title": "العادات الذرية", "author": "جيمس كلير", "price": 190, "category": "تنمية ذاتية وعلم نفس", "description": "إطار عمل لبناء العادات الحسنة والتخلص من السيئة عبر خطوات يومية صغيرة.", "image": "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=400", "rating": 4.9},
+    {"id": "s3", "title": "فن اللامبالاة", "author": "مارك مانسون", "price": 150, "category": "تنمية ذاتية وعلم نفس", "description": "دليل يعلمك كيف تتوقف عن الاهتمام بأشياء لا تستحق لتعيش حياة هادئة ومستقرة.", "image": "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=400", "rating": 4.7},
+    {"id": "s4", "title": "محاط بالحمقى", "author": "توماس إريكسون", "price": 180, "category": "تنمية ذاتية وعلم نفس", "description": "فهم الأنماط الأربعة للشخصيات البشرية (الألوان) وكيفية التعامل الذكي معهم.", "image": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=400", "rating": 4.6},
+    {"id": "s5", "title": "عقدك النفسية سجنك للأبد", "author": "يوسف الحسني", "price": 165, "category": "تنمية ذاتية وعلم نفس", "description": "كشف الأقنعة النفسية وتحليل العلاقات الإنسانية من منظور واقعي طبي مدعم بالأمثلة.", "image": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=400", "rating": 4.8},
+    {"id": "s6", "title": "جلسات نفسية", "author": "محمد إبراهيم", "price": 120, "category": "تنمية ذاتية وعلم نفس", "description": "رسائل ودعم نفسي لترميم الذات والسلام الداخلي والتصالح مع مخاوف الحياة.", "image": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=400", "rating": 4.8},
+    {"id": "s7", "title": "أبي الذي أكره", "author": "عماد رشاد عثمان", "price": 140, "category": "تنمية ذاتية وعلم نفس", "description": "كتاب رائع يناقش التعافي من صدمات التنشئة والروابط الوالدية السامة والشفاء منها.", "image": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=400", "rating": 4.9},
+    {"id": "s8", "title": "الخروج عن النص من جديد", "author": "محمد طه", "price": 130, "category": "تنمية ذاتية وعلم نفس", "description": "دعوة لاكتشاف الذات الحقيقية والتخلص من الأدوار المزيفة المفروضة عليك مجتمعياً.", "image": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=400", "rating": 4.7},
+    {"id": "s9", "title": "قبل أن تبرد القهوة (الأخضر)", "author": "توشيكازو كواغوتشي", "price": 135, "category": "تنمية ذاتية وعلم نفس", "description": "رواية يابانية بنكهة نفسية عن مقهى يتيح فرصة السفر عبر الزمن بشروط صارمة.", "image": "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=400", "rating": 4.8},
+    {"id": "s10", "title": "قبل أن تبرد القهوة (الأزرق)", "author": "توشيكازو كواغوتشي", "price": 135, "category": "تنمية ذاتية وعلم نفس", "description": "الجزء الثاني واستكمال للحكايات الإنسانية المؤثرة لمن يتمنون العودة للماضي
