@@ -169,3 +169,91 @@ default_books = [
     {"id": "d1", "title": "ثم لم يبقَ أحد", "author": "أجاثا كريستي", "price": 110, "category": "قصص بوليسية ومغامرات", "description": "الرواية البوليسية الأكثر مبيعاً في التاريخ: 10 غُرباء في جزيرة معزولة ويموتون تلو الآخر.", "image": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=400", "rating": 4.9},
     {"id": "d2", "title": "الياقوتة الزرقاء", "author": "أرثر كونان دويل", "price": 85, "category": "قصص بوليسية ومغامرات", "description": "قضية ذكية ومثيرة للمحقق العبقري شيرلوك هولمز في البحث عن جوهرة ثمينة مسروقة داخل إوزة.", "image": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=400", "rating": 4.7}
     ]
+# 6. تهيئة وفحص الـ Session State لمنع اختفاء البيانات ودعم الربط الفوري بجيت هب
+if "books" not in st.session_state:
+    loaded_books = github_action("books.json", "LOAD")
+    st.session_state.books = loaded_books if loaded_books else default_books
+
+if "categories" not in st.session_state:
+    loaded_cats = github_action("categories.json", "LOAD")
+    st.session_state.categories = loaded_cats if loaded_cats else default_cats
+
+if "orders" not in st.session_state:
+    loaded_orders = github_action("orders.json", "LOAD")
+    st.session_state.orders = loaded_orders if loaded_orders else []
+
+if "comments" not in st.session_state:
+    loaded_comments = github_action("comments.json", "LOAD")
+    st.session_state.comments = loaded_comments if isinstance(loaded_comments, dict) else {}
+
+if "users" not in st.session_state:
+    loaded_users = github_action("users.json", "LOAD")
+    st.session_state.users = loaded_users if loaded_users else []
+
+if "logged_in" not in st.session_state: st.session_state.logged_in = False
+if "user_role" not in st.session_state: st.session_state.user_role = "user"
+if "user_info" not in st.session_state: st.session_state.user_info = {"name": "", "whatsapp": ""}
+if "cart" not in st.session_state: st.session_state.cart = []
+
+# ==================== [ فحص الأمان: حظر العميل الفوري والطرد التلقائي ] ====================
+if st.session_state.logged_in and st.session_state.user_role == "user":
+    current_user_check = next((u for u in st.session_state.users if u["whatsapp"] == st.session_state.user_info["whatsapp"]), None)
+    if current_user_check:
+        if current_user_check["status"] == "محظور":
+            st.error("🚫 عذراً، لقد تم حظر حسابك بالكامل من دخول المتجر بواسطة الإدارة للإخلال بالشروط.")
+            st.session_state.logged_in = False
+            st.stop()
+        elif current_user_check["status"] == "معلق":
+            st.warning("⏳ حسابك معلق مؤقتاً لمراجعة الطلبات السابقة من قبل الإدارة، تواصل معنا لتفعيله.")
+            st.session_state.logged_in = False
+            st.stop()
+
+# ==================== [ شاشة تسجيل الدخول والـ Backdoor للأدمن ] ====================
+if not st.session_state.logged_in:
+    st.markdown('<div class="neon-title">World of Books 📚</div>', unsafe_allow_html=True)
+    st.markdown('<div class="neon-subtitle">سجل دخولك لتصفح وحجز أحدث الروايات والكتب الحصرية</div>', unsafe_allow_html=True)
+    
+    col_login, _ = st.columns([2, 1])
+    with col_login:
+        st.markdown('<div class="login-box">', unsafe_allow_html=True)
+        reg_name = st.text_input("👤 الاسم الكامل:")
+        
+        if reg_name.strip() == "admin_login":
+            admin_pass = st.text_input("🔑 كلمة مرور الأدمن السري:", type="password")
+            if st.button("دخول الإدارة السرية 🔐"):
+                if admin_pass == "admin123":
+                    st.session_state.user_role = "admin"
+                    st.session_state.logged_in = True
+                    st.success("مرحباً بك يا مدير المتجر!")
+                    st.rerun()
+                else: 
+                    st.error("كلمة المرور غير صحيحة!")
+        else:
+            reg_phone = st.text_input("📞 رقم الواتساب الخاص بك للتأكيد:")
+            if st.button("دخول المتجر الآن 🛒"):
+                if reg_name.strip() and reg_phone.strip():
+                    user_match = next((u for u in st.session_state.users if u["whatsapp"] == reg_phone.strip()), None)
+                    
+                    if user_match:
+                        if user_match["status"] == "محظور":
+                            st.error("🚫 هذا الحساب محظور تماماً من دخول المتجر!")
+                        elif user_match["status"] == "معلق":
+                            st.warning("⏳ حسابك معلق حالياً، تواصل مع الإدارة.")
+                        else:
+                            st.session_state.user_info = {"name": user_match["name"], "whatsapp": user_match["whatsapp"]}
+                            st.session_state.user_role = "user"
+                            st.session_state.logged_in = True
+                            st.rerun()
+                    else:
+                        new_u = {"name": reg_name.strip(), "whatsapp": reg_phone.strip(), "status": "نشط"}
+                        st.session_state.users.append(new_u)
+                        github_action("users.json", "SAVE", st.session_state.users)
+                        
+                        st.session_state.user_info = {"name": reg_name.strip(), "whatsapp": reg_phone.strip()}
+                        st.session_state.user_role = "user"
+                        st.session_state.logged_in = True
+                        st.rerun()
+                else: 
+                    st.error("برجاء إدخال اسمك ورقم واتساب صحيح لخدمتك!")
+        st.markdown('</div>', unsafe_allow_html=True)
+    st.stop()
