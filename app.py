@@ -339,4 +339,4 @@ elif menu == "🔐 لوحة الإدارة":
     with tab5:
         st.subheader("👤 إدارة حسابات المشترين وصلاحيات الدخول")
         st.markdown("يمكنك من هنا متابعة حسابات العملاء، وحظر أي رقم مزعج أو تعليق حسابه مؤقتاً.")
-        if not st.session_sta
+       if not st.session_state.logged_in:
