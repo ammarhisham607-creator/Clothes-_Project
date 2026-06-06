@@ -5,7 +5,7 @@ import base64
 import time
 from urllib.parse import quote
 
-# ضبط إعدادات الصفحة الرئيسية للمكتبة
+# ضبط إعدادات الصفحة الرئيسية للمتجر ستايل البرندات الكبيرة
 st.set_page_config(
     page_title="متجر عالم الكتب | World of Books 📚",
     page_icon="📚",
@@ -13,76 +13,92 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 1️⃣ تصميم ثيم النيون والبرق الحركي المخصص للمكتبة (Neon & Lightning CSS)
+# 1️⃣ ثيم النيون المتطور المدمج بلمسات المتاجر العالمية (أمازون/نون)
 def inject_neon_theme():
     neon_css = """
     <style>
-    /* خلفية داكنة فخمة تبرز توهج الكتب والنيون */
+    /* خلفية داكنة فخمة لإبراز الكتب والنيون */
     .stApp {
         background-color: #0b0c10;
         color: #c5c6c7;
         font-family: 'Cairo', sans-serif;
     }
     
-    /* عنوان المكتبة الرئيسي بتأثير رعشة البرق والكهرباء */
+    /* الهيدر الرئيسي بتأثير البرق الصاعق */
     .neon-title {
-        font-size: 50px;
+        font-size: 48px;
         font-weight: 900;
         color: #fff;
         text-align: center;
         text-shadow: 0 0 5px #00f3ff, 0 0 10px #00f3ff, 0 0 20px #00f3ff, 0 0 40px #00f3ff;
         animation: lightning-blink 2.5s infinite alternate;
         margin-bottom: 5px;
-        letter-spacing: 1px;
     }
     
     .neon-subtitle {
         text-align: center;
         color: #00f3ff;
-        font-size: 18px;
-        margin-bottom: 35px;
-        text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+        font-size: 16px;
+        margin-bottom: 30px;
+        text-shadow: 0 0 5px rgba(0, 243, 255, 0.4);
     }
     
-    /* كروت الكتب العادية */
+    /* كروت الكتب الاحترافية ستايل نون وأمازون مع لمسة نيون */
     .book-card {
         border: 1px solid #1f2833;
         border-radius: 12px;
-        padding: 18px;
+        padding: 20px;
         background-color: #1f2833;
-        box-shadow: 0 4px 15px rgba(0, 243, 255, 0.05);
+        box-shadow: 0 4px 15px rgba(0, 243, 255, 0.03);
         margin-bottom: 25px;
         transition: 0.3s ease-in-out;
         text-align: right;
+        position: relative;
     }
     .book-card:hover {
-        box-shadow: 0 4px 25px rgba(0, 243, 255, 0.3);
-        transform: translateY(-5px);
+        box-shadow: 0 4px 25px rgba(0, 243, 255, 0.25);
+        transform: translateY(-4px);
     }
 
-    /* كروت قسم العروض والخصومات (وهج البرق المشتعل) */
+    /* كروت قسم العروض المشتعلة من نون */
     .offer-card {
         border: 2px solid #ff0055;
         border-radius: 12px;
-        padding: 18px;
+        padding: 20px;
         background: linear-gradient(135deg, #1f2833 0%, #2d142c 100%);
         box-shadow: 0 0 15px #ff0055, inset 0 0 8px #ff0055;
         margin-bottom: 25px;
         animation: lightning-glow 2s infinite ease-in-out;
         text-align: right;
+        position: relative;
     }
     
-    /* شارة الخصم الفسفورية */
+    /* شارات أمازون ونون لتحفيز الشراء الفوري */
     .offer-badge {
         background-color: #ff0055;
         color: white;
-        padding: 4px 10px;
-        border-radius: 6px;
+        padding: 3px 8px;
+        border-radius: 4px;
         font-weight: bold;
-        font-size: 13px;
-        text-shadow: 0 0 5px #fff;
+        font-size: 12px;
+        text-shadow: 0 0 3px #fff;
         display: inline-block;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
+    }
+    
+    .stock-badge {
+        color: #ffc107;
+        font-size: 13px;
+        font-weight: bold;
+        display: block;
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+    
+    .rating-stars {
+        color: #ffc107;
+        font-size: 14px;
+        margin-bottom: 8px;
     }
 
     /* أنيميشن ضربات البرق الكهربائية للعنوان */
@@ -95,7 +111,6 @@ def inject_neon_theme():
         96% { text-shadow: 0 0 8px #00f3ff, 0 0 25px #00f3ff, 0 0 50px #00f3ff; }
     }
     
-    /* أنيميشن توهج وتبديل ألوان النيون في كروت العروض */
     @keyframes lightning-glow {
         0%, 100% { box-shadow: 0 0 12px #ff0055, inset 0 0 6px #ff0055; border-color: #ff0055; }
         50% { box-shadow: 0 0 25px #00ffcc, inset 0 0 12px #00ffcc; border-color: #00ffcc; }
@@ -104,19 +119,16 @@ def inject_neon_theme():
     """
     st.markdown(neon_css, unsafe_allow_html=True)
 
-# 2️⃣ دالة رفع الصور الذكية لـ GitHub (لحل مشكلة اختفاء الصور على السيرفر)
+# 2️⃣ دالة رفع الصور لـ GitHub (الحل الدائم والآمن واختفاء الصور)
 def upload_image_to_github(file_bytes, filename):
     try:
         token = st.secrets["GITHUB_TOKEN"]
         repo = st.secrets["GITHUB_REPO"]
     except Exception:
-        st.error("❌ خطأ في الـ Secrets: تأكد من إضافة GITHUB_TOKEN و GITHUB_REPO في لوحة تحكم Streamlit.")
+        st.error("❌ خطأ بالـ Secrets: تأكد من تهيئة مفاتيح جيت هب في لوحة Streamlit.")
         return None
 
-    # تحويل الصورة إلى base64 لرفعها عبر الـ API
     encoded_content = base64.b64encode(file_bytes).decode("utf-8")
-    
-    # اسم فريد لكل صورة بناءً على الوقت منعاً للتكرار
     clean_filename = f"book_{int(time.time())}_{filename.replace(' ', '_')}"
     path = f"images/{clean_filename}"
     url = f"https://api.github.com/repos/{repo}/contents/{path}"
@@ -125,27 +137,22 @@ def upload_image_to_github(file_bytes, filename):
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github.v3+json"
     }
-    
     data = {
-        "message": f"رفع صورة كتاب جديدة: {clean_filename}",
+        "message": f"رفع غلاف كتاب: {clean_filename}",
         "content": encoded_content,
         "branch": "main"
     }
     
     response = requests.put(url, headers=headers, json=data)
     if response.status_code in [200, 201]:
-        # الرابط الدائم للملف على جيت هب
         return f"https://raw.githubusercontent.com/{repo}/main/{path}"
-    else:
-        st.error(f"فشل الرفع إلى جيت هب: {response.json().get('message', '')}")
-        return None
+    return None
 
-# 3️⃣ إدارة جلب وتخزين بيانات الكتب عبر ملف الـ JSON السحابي على جيت هب
+# 3️⃣ جلب وحفظ البيانات سحابياً عبر الـ JSON
 def load_books_data():
     if "books_list" in st.session_state:
         return st.session_state["books_list"]
         
-    # كتب افتراضية في حال لم يتم جلب الملف بنجاح بعد
     fallback_books = [
         {"title": "رواية أرض زيكولا", "price": 90, "is_offer": True, "old_price": 120, "image": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=500", "category": "روايات"},
         {"title": "كتاب العادات الذرية", "price": 140, "is_offer": False, "old_price": 140, "image": "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500", "category": "تطوير ذات"}
@@ -182,80 +189,104 @@ def save_books_data(updated_list):
         json_string = json.dumps(updated_list, ensure_ascii=False, indent=4)
         encoded = base64.b64encode(json_string.encode('utf-8')).decode('utf-8')
         
-        data = {
-            "message": "تحديث مستودع كتب المتجر",
-            "content": encoded,
-            "branch": "main"
-        }
-        if sha:
-            data["sha"] = sha
+        data = {"message": "تحديث قاعدة بيانات الكتب", "content": encoded, "branch": "main"}
+        if sha: data["sha"] = sha
             
         requests.put(url, headers=headers, json=data)
     except Exception:
         pass
 
-# تهيئة عربة المشتريات للزائر
 if "book_cart" not in st.session_state:
     st.session_state.book_cart = []
 
-# تفعيل النيون والبرق في الواجهة
 inject_neon_theme()
 st.markdown('<div class="neon-title">⚡ WORLD OF BOOKS ⚡</div>', unsafe_allow_html=True)
-st.markdown('<div class="neon-subtitle">⚡ بوابتك السحرية لأقوى الكتب والروايات بتأثيرات النيون المشعة ⚡</div>', unsafe_allow_html=True)
+st.markdown('<div class="neon-subtitle">⚡ تجربة تسوق ذكية ومحمية مستوحاة من أكبر المنصات العالمية ⚡</div>', unsafe_allow_html=True)
 
-# 4️⃣ قائمة التنقل الجانبية
-st.sidebar.markdown("<h2 style='text-align:center; color:#00f3ff;'>⚡ أقسام القائمة ⚡</h2>", unsafe_allow_html=True)
+# 4️⃣ إعداد نظام المنيو الجانبي للزائر (تمت إزالة صفحة الإدارة منه نهائياً لمنع الفضول)
+st.sidebar.markdown("<h2 style='text-align:center; color:#00f3ff;'>🛒 أقسام المتجر</h2>", unsafe_allow_html=True)
 menu = st.sidebar.selectbox(
-    "اختر وجهتك:",
-    ["🏠 مكتبة الكتب الرئيسية", "🔥 قسم العروض والخصومات", "🛒 عربة القراءة والمشتريات", "⚙️ لوحة تحكم الإدارة"]
+    "انتقل إلى:",
+    ["🏠 بوابة التصفح الرئيسية", "🔥 العروض اليومية الخاطفة", "🛍️ سلة مشترياتك المعلقة"]
 )
+
+# 🔐 جدار الحماية والأمان (خانة سرية منفصلة تماماً في أسفل الـ Sidebar للمسؤول فقط)
+st.sidebar.markdown("---")
+with st.sidebar.expander("🔒 دخول المشرف والمسؤولين"):
+    admin_password = st.text_input("أدخل كلمة المرور السرية:", type="password")
+    # الباسورد الافتراضي admin123
+    if admin_password == "admin123":
+        st.success("🔓 تم التحقق بنجاح! خيار الإدارة متاح الآن بالأسفل:")
+        if st.checkbox("⚙️ فتح لوحة التحكم السحابية"):
+            menu = "⚙️ لوحة تحكم الإدارة"
+    elif admin_password:
+        st.error("❌ كلمة مرور خاطئة! غير مصرح لك.")
 
 books = load_books_data()
 
-# ==================== [ 🏠 مكتبة الكتب الرئيسية ] ====================
-if menu == "🏠 مكتبة الكتب الرئيسية":
-    st.markdown("<h2 style='text-align:right; color:#00f3ff;'>📚 جميع الكتب المتاحة بالمتجر</h2>", unsafe_allow_html=True)
+# ==================== [ 🏠 بوابة التصفح الرئيسية (أمازون/نون ستايل) ] ====================
+if menu == "🏠 بوابة التصفح الرئيسية":
+    # هيدر البحث والفلترة الاحترافي العلوي مثل نون وچوميا
+    st.markdown("<h3 style='text-align:right; color:#00f3ff;'>🔍 ماذا تريد أن تقرأ اليوم؟</h3>", unsafe_allow_html=True)
     
-    if not books:
-        st.warning("جاري ملء الرفوف بالكتب والروايات... انتظرونا!")
+    col_search, col_filter = st.columns([3, 1])
+    with col_search:
+        search_query = st.text_input("ابحث باسم الكتاب أو الرواية الحركية...", placeholder="مثال: أرض زيكولا، العادات الذرية...")
+    with col_filter:
+        category_filter = st.selectbox("تصفية بالأقسام:", ["كل الأقسام", "روايات", "علم نفس", "تطوير ذات", "بيزنس", "تاريخ"])
+
+    # تصفية وفلترة المنتجات بناء على مدخلات الزبون
+    filtered_books = books
+    if search_query:
+        filtered_books = [b for b in filtered_books if search_query.lower() in b['title'].lower()]
+    if category_filter != "كل الأقسام":
+        filtered_books = [b for b in filtered_books if b.get('category') == category_filter]
+
+    st.markdown("---")
+    
+    if not filtered_books:
+        st.info("💡 لم نجد كتباً تطابق بحثك حالياً، جرب تصفح قسم آخر!")
     else:
-        cols = st.columns(2)
-        for idx, book in enumerate(books):
-            with cols[idx % 2]:
+        cols = st.columns(3) # عرض 3 كتب في الصف الواحد لترتيب فخم
+        for idx, book in enumerate(filtered_books):
+            with cols[idx % 3]:
                 if book.get("is_offer"):
                     st.markdown(f"""
                     <div class="offer-card">
-                        <div class="offer-badge">⚡ عرض خاص</div>
+                        <div class="offer-badge">⚡ صفقة اليوم</div>
                         <h3>{book['title']}</h3>
-                        <p>التصنيف: {book.get('category', 'عام')}</p>
-                        <p style='font-size:18px;'>السعر: <del style='color:#ff0055;'>{book.get('old_price')} ج.م</del> <b style='color:#00ffcc;'>{book['price']} ج.م</b></p>
+                        <div class="rating-stars">⭐ 4.9 (140 تقييم)</div>
+                        <p style='color:#ccc; font-size:13px;'>القسم: {book.get('category', 'عام')}</p>
+                        <p style='font-size:17px;'>السعر: <del style='color:#ff0055;'>{book.get('old_price')} ج.م</del> <b style='color:#00ffcc;'>{book['price']} ج.م</b></p>
+                        <span class="stock-badge">🔥 متبقي نسختين فقط في المخزن!</span>
                     </div>
                     """, unsafe_allow_html=True)
                 else:
                     st.markdown(f"""
                     <div class="book-card">
                         <h3>{book['title']}</h3>
-                        <p>التصنيف: {book.get('category', 'عام')}</p>
-                        <p style='font-size:18px; color:#00f3ff;'>السعر: <b>{book['price']} ج.م</b></p>
+                        <div class="rating-stars">⭐ 4.7 (85 تقييم)</div>
+                        <p style='color:#ccc; font-size:13px;'>القسم: {book.get('category', 'عام')}</p>
+                        <p style='font-size:17px; color:#00f3ff;'>السعر: <b>{book['price']} ج.م</b></p>
+                        <span class="stock-badge" style="color:#28a745;">✔️ متوفر وجاهز للشحن الفوري</span>
                     </div>
                     """, unsafe_allow_html=True)
                 
                 if book.get("image"):
                     st.image(book["image"], use_container_width=True)
                 
-                if st.button(f"إضافة لعربة المشتريات 🛒", key=f"add_b_{idx}"):
+                if st.button(f"أضف إلى العربة 🛒", key=f"main_b_{idx}"):
                     st.session_state.book_cart.append(book)
-                    st.success(f"✔️ أضيف كتاب '{book['title']}' إلى عربتك!")
+                    st.toast(f"✔️ أضيف {book['title']} للسلة")
 
-# ==================== [ 🔥 قسم العروض والخصومات ] ====================
-elif menu == "🔥 قسم العروض والخصومات":
-    st.markdown("<h2 style='text-align:right; color:#ff0055; text-shadow: 0 0 10px #ff0055;'>💥 عروض البرق الخاطفة على الروايات والكتب!</h2>", unsafe_allow_html=True)
+# ==================== [ 🔥 العروض اليومية الخاطفة ] ====================
+elif menu == "🔥 العروض اليومية الخاطفة":
+    st.markdown("<h2 style='text-align:right; color:#ff0055; text-shadow: 0 0 10px #ff0055;'>⚡ تخفيضات البرق الحصرية (لفترة محدودة جداً)</h2>", unsafe_allow_html=True)
     
-    # تصفية الكتب اللي عليها عروض فقط
     offer_books = [b for b in books if b.get("is_offer") == True]
     
     if not offer_books:
-        st.info("لا توجد عروض نشطة حالياً، انتظروا كولكشن عروض المعرض القادم! ⚡")
+        st.info("كل عروض اليوم الخاطفة انتهت! انتظرونا في موجة الخصومات القادمة.")
     else:
         cols = st.columns(2)
         for idx, book in enumerate(offer_books):
@@ -263,50 +294,52 @@ elif menu == "🔥 قسم العروض والخصومات":
                 saving = int(book.get('old_price', 0) - book.get('price', 0))
                 st.markdown(f"""
                 <div class="offer-card">
-                    <div class="offer-badge">🔥 وفرت {saving} ج.م من سعر الكتاب</div>
+                    <div class="offer-badge">🔥 وفر كاش {saving} ج.م</div>
                     <h3>{book['title']}</h3>
+                    <div class="rating-stars">⭐ 5.0 (أعلى تقييم بمصر)</div>
                     <p style='font-size: 18px;'>
                         السعر الأصلي: <span style='text-decoration: line-through; color: #ff0055;'>{book.get('old_price')} ج.م</span><br>
-                        <span style='color: #00ffcc; font-weight: bold; font-size:22px;'>سعر العرض الحركي: {book['price']} ج.م ⚡</span>
+                        <span style='color: #00ffcc; font-weight: bold; font-size:23px;'>سعر التصفية: {book['price']} ج.م ⚡</span>
                     </p>
+                    <span class="stock-badge">🚨 أوشك على النفاذ - طلب عالي جداً!</span>
                 </div>
                 """, unsafe_allow_html=True)
                 
                 if book.get("image"):
                     st.image(book["image"], use_container_width=True)
                 
-                if st.button("اقتنص عرض الكتاب فوراً 🛍️", key=f"add_offer_b_{idx}"):
+                if st.button("اقتنص العرض الحركي فورا 🛍️", key=f"off_page_{idx}"):
                     st.session_state.book_cart.append(book)
-                    st.success("✔️ تم حجز نسخة من كتاب العرض في عربتك!")
+                    st.success("✔️ تم حجز نسخة العرض بنجاح!")
 
-# ==================== [ 🛒 عربة القراءة والمشتريات ] ====================
-elif menu == "🛒 عربة القراءة والمشتريات":
-    st.markdown("<h2 style='text-align:right; color:#00f3ff;'>🛒 الكتب التي اخترتها لقراءتها</h2>", unsafe_allow_html=True)
+# ==================== [ 🛍️ سلة مشترياتك المعلقة ] ====================
+elif menu == "🛍️ سلة مشترياتك المعلقة":
+    st.markdown("<h2 style='text-align:right; color:#00f3ff;'>🛒 مراجعة حقيبة طلباتك</h2>", unsafe_allow_html=True)
     
     if not st.session_state.book_cart:
-        st.info("عربتك فارغة. اذهب للمكتبة واختر بعض الكتب لتغذية عقلك! 📚")
+        st.info("عربة تسوقك فارغة حالياً. تصفح أقسام الكتب واقتنص روائعك!")
     else:
         total_price = 0
         for idx, cart_item in enumerate(st.session_state.book_cart):
             col1, col2 = st.columns([4, 1])
             with col1:
-                st.markdown(f"#### 📚 {cart_item['title']} - **{cart_item['price']} ج.م**")
+                st.markdown(f"#### 📖 {cart_item['title']} - **{cart_item['price']} ج.م**")
                 total_price += cart_item['price']
             with col2:
-                if st.button("إزالة ❌", key=f"rem_b_{idx}"):
+                if st.button("إلغاء الحجز ❌", key=f"rem_cart_{idx}"):
                     st.session_state.book_cart.pop(idx)
                     st.rerun()
         
-        st.markdown(f"### 💰 الحساب الإجمالي للكتب: `{total_price} ج.م`")
+        st.markdown(f"### 💰 الحساب النهائي المطلوب: `{total_price} ج.م`")
         st.markdown("---")
         
-        st.subheader("📝 بيانات استلام الأوردر وتأكيد التوصيل")
-        with st.form("whatsapp_book_form"):
-            user_name = st.text_input("اسم المستلم بالكامل:")
-            user_phone = st.text_input("رقم الواتساب / الموبايل:")
-            user_address = st.text_area("عنوان التوصيل بالتفصيل (المحافظة والمنطقة):")
+        st.subheader("📝 تفاصيل الشحن والتوصيل بالمحافظات")
+        with st.form("whatsapp_secure_form"):
+            user_name = st.text_input("اسم المستلم رباعي:")
+            user_phone = st.text_input("رقم الموبايل الفعال (عليه واتساب):")
+            user_address = st.text_area("العنوان بالتفصيل الملل:")
             
-            submit_order = st.form_submit_button("تأكيد وحجز طلب الكتب عبر الواتساب 💬")
+            submit_order = st.form_submit_button("إرسال الفاتورة عبر الواتساب لتأكيد الشحن 💬")
             
             if submit_order:
                 if user_name and user_phone and user_address:
@@ -315,51 +348,51 @@ elif menu == "🛒 عربة القراءة والمشتريات":
                         books_details += f"- كتاب {i+1}: {item['title']} ({item['price']} ج.م)\n"
                     
                     whatsapp_msg = (
-                        f"🚨 *أوردر جديد من متجر World of Books* 🚨\n\n"
-                        f"👤 *الاسم:* {user_name}\n"
-                        f"📞 *الرقم:* {user_phone}\n"
-                        f"📍 *العنوان:* {user_address}\n\n"
-                        f"📚 *الكتب المطلوبة:*\n{books_details}\n"
-                        f"💰 *الحساب الكلي للطلب:* {total_price} ج.م\n"
-                        f"⚡ _برجاء تأكيد الشحن والتجهيز فوراً._"
+                        f"🚨 *طلب شراء جديد من متجر World of Books* 🚨\n\n"
+                        f"👤 *الاسم للطلب:* {user_name}\n"
+                        f"📞 *الموبايل:* {user_phone}\n"
+                        f"📍 *العنوان الفعلي:* {user_address}\n\n"
+                        f"📚 *قائمة المحتويات:*\n{books_details}\n"
+                        f"💰 *حساب الشحن الكلي الصافي:* {total_price} ج.م\n"
+                        f"⚡ _يرجى مراجعة وتأكيد خروج الشحنة للمندوب فوراً._"
                     )
                     
                     encoded_msg = quote(whatsapp_msg)
-                    wa_url = f"https://wa.me/201200000000?text={encoded_msg}" # حط رقمك هنا مكان الاصفار
+                    wa_url = f"https://wa.me/201200000000?text={encoded_msg}"
                     
-                    st.markdown(f'<a href="{wa_url}" target="_blank" style="background-color:#25D366; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold; display:block; text-align:center;">👉 اضغط هنا للانتقال الفوري للواتساب لإرسال أوردر الكتب</a>', unsafe_allow_html=True)
+                    st.markdown(f'<a href="{wa_url}" target="_blank" style="background-color:#25D366; color:white; padding:12px; border-radius:8px; text-decoration:none; font-weight:bold; display:block; text-align:center;">👉 اضغط هنا للانتقال وتأكيد الطلب بالواتساب الخاص بالمتجر</a>', unsafe_allow_html=True)
                     st.session_state.book_cart = [] 
                 else:
-                    st.error("❌ من فضلك اكتب اسمك وعنوانك بالكامل لحجز الأوردر!")
+                    st.error("❌ من فضلك سجل كافة بيانات الشحن والتواصل لتأمين خروج الشحنة!")
 
-# ==================== [ ⚙️ لوحة تحكم الإدارة ] ====================
+# ==================== [ ⚙️ لوحة تحكم الإدارة (المحمية تماماً) ] ====================
 elif menu == "⚙️ لوحة تحكم الإدارة":
-    st.markdown("<h2 style='text-align:right; color:#00f3ff;'>🛠️ لوحة إدارة الكتب والعروض للمتجر</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:right; color:#ffc107;'>🛠️ لوحة تحكم الإدارة السحابية والتحكم بمخازن الكتب</h2>", unsafe_allow_html=True)
     
-    st.markdown("### ➕ إضافة كتاب أو رواية جديدة للمتجر")
-    # تم تصليح السطر رقم 200 وحل مشكلة الـ Typo نهائياً!
-    with st.form("admin_add_book_form", clear_on_submit=True):
-        book_title = st.text_input("اسم الكتاب / الرواية:")
-        book_category = st.selectbox("تصنيف الكتاب:", ["روايات", "علم نفس", "تطوير ذات", "بيزنس", "تاريخ"])
+    st.markdown("### ➕ إدراج كتاب أو إصدار جديد بالرفوف السحابية")
+    # تم تثبيت الكود الصحيح بالكامل لمنع الـ Crash
+    with st.form("admin_add_secure_form", clear_on_submit=True):
+        book_title = st.text_input("عنوان الكتاب / الرواية:")
+        book_category = st.selectbox("تصنيف وضعه بالمتجر:", ["روايات", "علم نفس", "تطوير ذات", "بيزنس", "تاريخ"])
         
         st.markdown("---")
-        is_book_offer = st.checkbox("تفعيل الخصم ووضع الكتاب في قسم العروض الحصرية؟ 🔥")
+        is_book_offer = st.checkbox("وضعه فوراً في قسم العروض والتخفيضات اليومية؟ 🔥")
         
         c1, c2 = st.columns(2)
         with c1:
-            curr_price = st.number_input("سعر البيع الحالي (ج.م):", min_value=0, step=5)
+            curr_price = st.number_input("سعر البيع المباشر (ج.م):", min_value=0, step=5)
         with c2:
-            old_b_price = st.number_input("السعر الأصلي قبل الخصم (إذا كان عليه عرض):", min_value=0, step=5)
+            old_b_price = st.number_input("السعر القديم قبل الشطب والخصم (إن وجد):", min_value=0, step=5)
             
-        book_img = st.file_uploader("اختر صورة غلاف الكتاب (ستُرفع مباشرة لجيت هب وتثبت):", type=["jpg", "png", "jpeg"])
+        book_img = st.file_uploader("ارفع صورة غلاف الكتاب (سيتم تأمين رفعها في جيت هب):", type=["jpg", "png", "jpeg"])
         st.markdown("---")
         
-        # الزرار الصحيح الخالي من الأخطاء:
-        admin_submit = st.form_submit_button("إدراج الكتاب وتحديث المكتبة السحابية 🚀")
+        # التعديل البرمجي الخالي من الأخطاء:
+        admin_submit = st.form_submit_button("رفع وتحديث المتجر السحابي 🚀")
         
         if admin_submit:
             if book_title and book_img:
-                with st.spinner("⚡ جاري رفع الغلاف وتأمين الرابط السحابي على جيت هب..."):
+                with st.spinner("⚡ جاري معالجة غلاف الكتاب وتأمينه سحابياً..."):
                     img_bytes = book_img.read()
                     uploaded_link = upload_image_to_github(img_bytes, book_img.name)
                     
@@ -372,28 +405,26 @@ elif menu == "⚙️ لوحة تحكم الإدارة":
                             "image": uploaded_link,
                             "category": book_category
                         }
-                        
                         books.append(added_book)
                         save_books_data(books)
-                        
-                        st.success(f"✔️ تم رفع غلاف الكتاب وتثبيت رواية '{book_title}' بالسيستم بنجاح!")
+                        st.success(f"✔️ تم تأمين غلاف وتفاصيل '{book_title}' بالمتجر بنجاح!")
                         st.rerun()
                     else:
-                        st.error("❌ مشكلة في التوكن أو الصلاحيات أثناء رفع الصورة.")
+                        st.error("❌ فشل معالجة صلاحيات جيت هب أثناء الرفع السحابي.")
             else:
-                st.error("❌ يجب كتابة اسم الكتاب ورفع صورة غلافه أولاً!")
+                st.error("❌ من فضلك املأ البيانات وارفع صورة غلاف أولاً.")
                 
-    st.markdown("### 🗑️ إدارة وحذف الكتب الحالية بالمتجر")
+    st.markdown("### 🗑️ جرد وتصفية الكتب الموجودة بالسيستم")
     if not books:
-        st.info("لا توجد كتب مسجلة حالياً.")
+        st.info("الرفوف فارغة.")
     else:
         for i, item in enumerate(books):
             col_t, col_b = st.columns([5, 1])
             with col_t:
-                st.write(f"📖 **{item['title']}** - التصنيف: `{item['category']}` - السعر الحالي: `{item['price']} ج.م`")
+                st.write(f"📖 **{item['title']}** - القسم: `{item['category']}` - السعر المطبق: `{item['price']} ج.م`")
             with col_b:
-                if st.button("حذف الكتاب 🗑️", key=f"del_b_{i}"):
+                if st.button("حذف وتصفية 🗑️", key=f"del_secure_b_{i}"):
                     books.pop(i)
                     save_books_data(books)
-                    st.success("تم حذف الكتاب بنجاح من الرفوف!")
+                    st.success("تم الحذف بنجاح وتحديث واجهة المستخدمين.")
                     st.rerun()
