@@ -455,4 +455,4 @@ elif menu == "👤 حسابي (تسجيل دخول الزبون)":
                             st.session_state.user_name = u_email.split('@')[0].capitalize() # اسم افتراضي مشتق
                             st.success("✔️ أهلاً بك مجدداً في نون وعالم الكتب!")
                             time.sleep(1)
-                            st.rerun(
+                            st.rerun()
